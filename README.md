@@ -1,10 +1,10 @@
-# Orbit 0.4.0
+# Orbit 0.4.1
 
 Đại ca có thể xử lý ảnh, PDF và tài liệu Office tại máy bằng menu tròn. Em đã sửa nền vuông ngoài vòng, thêm nhận dạng nội dung file và WebP. File không được tải lên dịch vụ bên ngoài.
 
 ## Chạy ứng dụng
 
-Yêu cầu Windows 11 x64 và .NET 8 Desktop Runtime x64; OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.4.0-win-x64.zip`. Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
+Yêu cầu Windows 11 x64 và .NET 8 Desktop Runtime x64; OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.4.1-win-x64.zip`. Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
 
 ## Cập nhật
 
@@ -74,6 +74,6 @@ SDK .NET 8.0.413 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/packa
 
 `--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ hiện chỉ giữ trong phiên.
 
-Chi tiết kiểm chứng và giới hạn: [bản 0.4.0](docs/RELEASE-0.4.0.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
+Chi tiết kiểm chứng và giới hạn: [bản 0.4.1](docs/RELEASE-0.4.1.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
 
 .NET 8 hết hỗ trợ ngày 10/11/2026; cần nâng lên .NET LTS còn được hỗ trợ trước phát hành rộng rãi, theo [chính sách Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).

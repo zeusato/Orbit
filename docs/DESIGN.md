@@ -1,5 +1,7 @@
 # Thiết kế giao diện Orbit
 
+0.4.1: Cài đặt và cửa sổ Cập nhật Orbit có dòng “Tác giả: Nguyễn Mạnh Quyết”; không hiển thị địa chỉ nguồn tải cập nhật.
+
 0.4.0: Cài đặt có bật/tắt tự tải và cập nhật khi rảnh, nút mở cửa sổ Cập nhật Orbit. Cửa sổ này hiển thị bản đang dùng, trạng thái/tỷ lệ tải, Kiểm tra ngay/Cập nhật ngay/Để sau 4 giờ. Có đường vào từ menu khay. Không hiện popup liên tục khi mất mạng. Editor, job, menu hoặc kéo chuột chặn áp dụng; tự động chỉ khi mọi cửa sổ đã đóng về khay.
 
 ## Cập nhật tương tác 0.3.2

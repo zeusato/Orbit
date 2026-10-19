@@ -1,6 +1,10 @@
 # Tiến độ Orbit
 
-## Bản hiện tại: 0.4.0
+## Bản hiện tại: 0.4.1
+
+Cài đặt và cửa sổ Cập nhật Orbit hiển thị “Tác giả: Nguyễn Mạnh Quyết”, không còn địa chỉ nguồn tải. Build 0 warning/error; 57/57 kiểm thử đạt tại `artifacts/tests/20261019-181427-478`. Phát hành qua workflow tự động khi push main.
+
+## Bản 0.4.0
 
 Đã triển khai cập nhật portable từ `zeusato/Orbit`: kiểm tra/tải nền, lưu trạng thái tải qua restart, chữ ký RSA-PSS + SHA-256, kiểm tra ZIP/path/version, helper đợi app thoát, backup và rollback lỗi copy/khởi động. Có Settings và cửa sổ cập nhật, hoãn/tắt cập nhật, script ký và GitHub workflow tự tạo tag và publish release khi push main có phiên bản mới. Không thêm runtime/model mới. Chi tiết [UPDATES.md](UPDATES.md), [RELEASE-0.4.0.md](RELEASE-0.4.0.md).
 

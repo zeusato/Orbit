@@ -18,7 +18,7 @@ public sealed class SettingsWindow : GlassWindow
         var startup = new CheckBox { Content = "Chạy ở khay hệ thống khi đăng nhập Windows", IsChecked = AppSettings.StartupEnabled }; stack.Children.Add(startup);
         var updates = new CheckBox { Content = "Tự tải và cập nhật khi Orbit ở khay, không có tác vụ", IsChecked = app.Settings.AutoUpdate }; stack.Children.Add(updates);
         stack.Children.Add(Ui.Button("Cập nhật Orbit…", () => new UpdateWindow(app).Show()));
-        var note = Ui.Text($"Orbit {UpdateService.CurrentVersion} · Ảnh / WebP / PDF / Office\nĐầu ra lưu cạnh nguồn; giữ bản gốc. Office → PDF cần Microsoft Office.\nKiểm tra cập nhật mỗi 12 giờ từ github.com/zeusato/Orbit. Kính menu lấy nền tại lúc mở.", 12, true); note.Margin = new Thickness(0, 16, 0, 0); stack.Children.Add(note);
+        var note = Ui.Text($"Orbit {UpdateService.CurrentVersion} · Ảnh / WebP / PDF / Office\nTác giả: Nguyễn Mạnh Quyết\nĐầu ra lưu cạnh nguồn; giữ bản gốc. Office → PDF cần Microsoft Office.\nKiểm tra cập nhật mỗi 12 giờ. Kính menu lấy nền tại lúc mở.", 12, true); note.Margin = new Thickness(0, 16, 0, 0); stack.Children.Add(note);
         var error = Ui.Text("", 12); error.SetResourceReference(TextBlock.ForegroundProperty, "Danger"); error.Margin = new Thickness(0, 10, 0, 0); stack.Children.Add(error); SetBody(stack);
         var buttons = Ui.Row(Ui.Button("Hủy", Close), Ui.Button("Lưu cài đặt", () =>
         {
