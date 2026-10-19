@@ -8,6 +8,8 @@ Yêu cầu Windows 11 x64 và .NET 8 Desktop Runtime x64; OCR cần Microsoft Vi
 
 ## Cập nhật
 
+Tải bản portable tại [GitHub Releases](https://github.com/zeusato/Orbit/releases/latest). Để phát hành bản mới: tăng `Version` trong `src/Orbit.App/Orbit.App.csproj`, thêm `docs/RELEASE-X.Y.Z.md`, commit và push `main`. GitHub Actions tự build/test/ký, tạo tag và publish release; không cần bấm nút. Phiên bản đã phát hành sẽ được bỏ qua, không ghi đè.
+
 Từ 0.4.0, Orbit mặc định kiểm tra GitHub Releases `zeusato/Orbit` mỗi 12 giờ, tải ZIP mới và tự áp dụng khi ở khay, không có cửa sổ/tác vụ/kéo thả. Cài đặt cho phép tắt; menu khay và Cài đặt có **Cập nhật Orbit** để kiểm tra, áp dụng ngay hoặc hoãn 4 giờ. Gói phải qua kiểm tra chữ ký riêng và SHA-256; helper giữ backup và khôi phục khi bản mới lỗi khởi động. Chưa có certificate Authenticode, Windows vẫn có thể cảnh báo EXE portable. Chi tiết phát hành, cache/backup và giới hạn phục hồi: [UPDATES.md](docs/UPDATES.md).
 
 Dấu X thu ứng dụng về khay; nhấp đúp biểu tượng khay để mở lại. Chuột phải chọn Thoát Orbit để kết thúc. Không cần quyền administrator. Bản này không dùng bộ cài; gói cập nhật có chữ ký riêng của Orbit, EXE chưa có chữ ký Authenticode.

@@ -4,7 +4,7 @@
 
 Đã triển khai cập nhật portable từ `zeusato/Orbit`: kiểm tra/tải nền, lưu trạng thái tải qua restart, chữ ký RSA-PSS + SHA-256, kiểm tra ZIP/path/version, helper đợi app thoát, backup và rollback lỗi copy/khởi động. Có Settings và cửa sổ cập nhật, hoãn/tắt cập nhật, script ký và GitHub workflow tự tạo tag và publish release khi push main có phiên bản mới. Không thêm runtime/model mới. Chi tiết [UPDATES.md](UPDATES.md), [RELEASE-0.4.0.md](RELEASE-0.4.0.md).
 
-57/57 kiểm thử tại `artifacts/tests/20261019-175755-577`; helper thực thi thành công cả nâng phiên bản và rollback bằng tiến trình fixture riêng tại `artifacts/updater-tests/c33da66873914583a5fe0dd93871c929`. Bản cũ đang chạy được giữ nguyên, build mới dùng artifacts-path riêng. Vòng đóng gói cuối đã đạt 57/57 kiểm thử, 0 warning/error và xác minh chữ ký thành công. Chưa phát hành stable trên GitHub ở thời điểm ghi mục này.
+57/57 kiểm thử tại `artifacts/tests/20261019-175755-577`; helper thực thi thành công cả nâng phiên bản và rollback bằng tiến trình fixture riêng tại `artifacts/updater-tests/c33da66873914583a5fe0dd93871c929`. Bản cũ đang chạy được giữ nguyên, build mới dùng artifacts-path riêng. Vòng đóng gói cuối đã đạt 57/57 kiểm thử, 0 warning/error và xác minh chữ ký thành công. Đã tự phát hành stable [v0.4.0](https://github.com/zeusato/Orbit/releases/tag/v0.4.0) qua push main ngày 19/10/2026. [CI](https://github.com/zeusato/Orbit/actions/runs/39241997812) đạt build/test/ký và cả hai kịch bản helper. Đã tải ZIP qua URL public không dùng token, xác minh chữ ký bằng public key của ứng dụng, SHA-256 và kích thước đều khớp manifest.
 
 ## Bản 0.3.2
 
