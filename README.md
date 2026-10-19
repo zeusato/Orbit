@@ -16,6 +16,12 @@ Dấu X thu ứng dụng về khay; nhấp đúp biểu tượng khay để mở
 
 Lần mở đầu, Orbit hỏi **Chạy cùng Windows?** Chọn **Bật cùng Windows** để tự chạy ở khay sau khi đăng nhập, không mở cửa sổ chính; không cần quyền administrator. **Không bật**, X hoặc Esc sẽ bỏ qua và không hỏi lại. Có thể đổi trong Cài đặt. Phiên đã bật startup không hỏi lại; phiên tự khởi động và chế độ kiểm thử không hiện lời hỏi. Bản cũ chưa từng chọn sẽ được hỏi một lần khi mở bản mới. Giữ thư mục Orbit tại vị trí đăng ký; nếu chuyển thư mục, tắt rồi bật lại startup trong Cài đặt.
 
+## Menu chuột phải
+
+Chuột phải vào file → **Orbit** → chọn công cụ. Submenu chỉ hiện công cụ hợp với loại file, và mục đầu "Mở menu tròn Orbit…" mở vòng công cụ tại con trỏ. Trên Windows 11, mục này nằm trong **Hiển thị thêm tùy chọn** (hoặc Shift + chuột phải). Chọn nhiều file cùng lúc thì các file được xử lý thành một lượt. Bật/tắt trong Cài đặt; menu được ghi cho tài khoản hiện tại, không cần quyền admin. Trước khi xóa hoặc chuyển thư mục Orbit, nên tắt tùy chọn này.
+
+Các cửa sổ công cụ nhớ thiết lập lần lưu trước (khung nền, mức nén, kích thước, tỷ lệ crop, GIF, nén video). Cài đặt có nút **Đặt lại thiết lập công cụ**.
+
 ## Menu tròn
 
 1. Kéo file từ Explorer hoặc Desktop, giữ chuột trái và bấm Ctrl + Space. Trong Cài đặt → Phím gọi menu khi đang kéo, chọn Ctrl + Space, Ctrl + Shift + Space hoặc Shift + Space. Lưu để áp dụng ngay, không cần khởi động lại. Cấu hình cũ được giữ khi nâng cấp.
@@ -54,7 +60,7 @@ Chọn từ hai PDF để hiện Ghép PDF. Batch tối đa 128 file và chỉ h
 
 ## File đầu ra và giới hạn
 
-Kết quả nằm cạnh file nguồn. Khi trùng tên, Orbit thêm `(1)`, `(2)`…; không ghi đè, di chuyển hoặc xóa nguồn. PDF xuất nhiều trang tạo thư mục `_images` hoặc `_pages`. Có thể mở kết quả/thư mục từ hàng tác vụ.
+Mặc định kết quả nằm cạnh file nguồn. Cài đặt → **Nơi lưu kết quả** có thể đổi sang thư mục con `Orbit` cạnh file nguồn, hoặc một thư mục cố định. Khi trùng tên, Orbit thêm `(1)`, `(2)`…; không ghi đè, di chuyển hoặc xóa nguồn. PDF xuất nhiều trang tạo thư mục `_images` hoặc `_pages`. Có thể mở kết quả/thư mục từ hàng tác vụ.
 
 Ảnh áp dụng EXIF orientation trước khi xuất và không sao chép metadata. Codec mở rộng dùng 8 bit/kênh, không cam kết giữ HDR/16 bit. Giới hạn 256 MB/file, 60 megapixel/ảnh, 32768 px/cạnh và 200 trang/tác vụ PDF. Thư mục nguồn cần có quyền ghi.
 
@@ -78,9 +84,9 @@ SDK .NET 10.0.402 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/pack
 .\scripts\run.ps1
 ```
 
-88 kiểm thử mặc định (phần chạy media ghi SKIP trên máy không có Media Foundation); thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
+100 kiểm thử mặc định (phần chạy media ghi SKIP trên máy không có Media Foundation); thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
 
-`--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt.
+`--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt. `Orbit.Tests.exe --make-icon assetsorbit.ico` dựng lại icon từ `OrbitIcon.cs` kèm ảnh xem trước.
 
 Chi tiết kiểm chứng và giới hạn: [bản 0.5.0](docs/RELEASE-0.5.0.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
 

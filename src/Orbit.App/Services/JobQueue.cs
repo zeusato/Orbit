@@ -46,6 +46,8 @@ public sealed class JobQueue : IDisposable
     private bool _disposed;
     public ObservableCollection<ImageJob> Jobs { get; } = [];
     public bool HasPending => Jobs.Any(j => j.CanCancel);
+    // Resolved when a job is queued, so changing the setting never moves jobs already waiting.
+    public Func<string, string?>? OutputFor { get; set; }
     public event Action<ImageJob>? Finished;
 
     private readonly string? _historyFile;
@@ -76,8 +78,9 @@ public sealed class JobQueue : IDisposable
     public void Add(IEnumerable<ImageRequest> requests)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        foreach (var request in requests)
+        foreach (var queued in requests)
         {
+            var request = queued.OutputDirectory == null && OutputFor?.Invoke(queued.Source) is { } output ? queued with { OutputDirectory = output } : queued;
             var job = new ImageJob(request); Jobs.Insert(0, job); (ToolCatalog.IsMediaTool(request.Tool) ? _media : _pending).Add(job);
         }
         // Keep the UI bounded while retaining every pending job.

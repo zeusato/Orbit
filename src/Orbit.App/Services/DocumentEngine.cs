@@ -19,7 +19,7 @@ public sealed class DocumentEngine
         if (!File.Exists(source)) throw new FileNotFoundException("Không tìm thấy file nguồn.", source);
         if (new FileInfo(source).Length > ImageEngine.MaxFileBytes) throw new NotSupportedException("Mỗi file tối đa 256 MB.");
         var kind = FileTypes.Detect(source);
-        var dir = Path.GetDirectoryName(source)!;
+        var dir = OutputLocation.Prepare(request);
         var folderOutput = request.Tool is ToolKind.PdfPng or ToolKind.PdfJpeg or ToolKind.PdfSplit;
         var temp = Path.Combine(dir, $".orbit-{Guid.NewGuid():N}" + (folderOutput ? "" : request.Tool == ToolKind.PdfWord ? ".tmp.docx" : ".tmp.pdf"));
         try

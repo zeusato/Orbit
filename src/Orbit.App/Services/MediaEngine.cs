@@ -83,7 +83,7 @@ public static class MediaEngine
             infos.Add((full, kind, info));
         }
         var (source, sourceKind, media) = infos[0];
-        var directory = Path.GetDirectoryName(source)!;
+        var directory = OutputLocation.Prepare(request);
         var options = request.Media;
         string? temp = null; var scratch = new List<string>();
         try

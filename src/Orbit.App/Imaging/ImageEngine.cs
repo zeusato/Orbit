@@ -142,7 +142,7 @@ public sealed class ImageEngine
         // Normalized pixels only: never copy stale EXIF orientation or location metadata.
         encoder.Frames.Add(BitmapFrame.Create(image));
         var source = Path.GetFullPath(request.Source);
-        var directory = Path.GetDirectoryName(source)!;
+        var directory = OutputLocation.Prepare(request);
         var temporary = Path.Combine(directory, $".orbit-{Guid.NewGuid():N}.tmp");
         try
         {

@@ -147,7 +147,8 @@ public sealed class MediaEditorWindow : GlassWindow
         _controls.Children.Add(fps);
         var widths = new WrapPanel();
         foreach (var value in new[] { 320, 480, 640 }) Choice(widths, $"{value} px", () => _gifWidth == value, () => _gifWidth = value, value <= _info.Width);
-        _gifWidth = Math.Min(480, _info.Width - _info.Width % 2);
+        _fps = Orbit.Settings.Defaults.GifFps is int f && f is 10 or 12 or 15 ? f : 12;
+        _gifWidth = Orbit.Settings.Defaults.GifWidth is int w && w is 320 or 480 or 640 && w <= _info.Width ? w : Math.Min(480, _info.Width - _info.Width % 2);
         _controls.Children.Add(widths); RefreshChoices();
     }
     private void BuildFrame()
@@ -164,7 +165,9 @@ public sealed class MediaEditorWindow : GlassWindow
         var sizes = new WrapPanel();
         Choice(sizes, "Gốc", () => _height == 0, () => _height = 0);
         foreach (var value in new[] { 1080, 720, 480 }) Choice(sizes, $"{value}p", () => _height == value, () => _height = value, value < shortSide);
-        _height = shortSide > 720 ? 720 : 0;
+        var remembered = Orbit.Settings.Defaults.VideoHeight;
+        _height = remembered is int h && (h == 0 || h < shortSide) ? h : shortSide > 720 ? 720 : 0;
+        _quality = Orbit.Settings.Defaults.VideoQuality ?? MediaQuality.Medium;
         _controls.Children.Add(sizes);
         Heading("Chất lượng");
         var qualities = new WrapPanel();
@@ -268,6 +271,14 @@ public sealed class MediaEditorWindow : GlassWindow
                 default: options = new(Height: _height, Quality: _quality); break;
             }
             Pause();
+            try
+            {
+                var d = Orbit.Settings.Defaults;
+                if (_tool == ToolKind.VideoGif) { d.GifFps = _fps; d.GifWidth = _gifWidth; }
+                else if (_tool == ToolKind.VideoCompress) { d.VideoHeight = _height; d.VideoQuality = _quality; }
+                if (_tool is ToolKind.VideoGif or ToolKind.VideoCompress) Orbit.Settings.Save();
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
             Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, Media: options)));
             Close();
         }

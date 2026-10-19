@@ -53,6 +53,18 @@ Dùng bộ xử lý media có sẵn của Windows (Media Foundation qua Windows.
   - Phụ đề, chuẩn hóa âm lượng, giữ nguyên luồng không mã hóa lại (stream copy).
   - WebM/MKV khi máy thiếu codec.
 
+## Menu chuột phải, nơi lưu, nhớ thiết lập, icon
+
+- **Menu chuột phải**: chuột phải vào file → **Orbit** → submenu theo loại file. Mục đầu tiên là "Mở menu tròn Orbit…", tiếp theo là các công cụ của loại đó; ví dụ JPEG không có "Chuyển sang JPEG", MP3 có "Ghép âm thanh", PDF có "Word" và "Ghép PDF".
+  - Ghi vào `HKCU\Software\Classes` của tài khoản hiện tại, không cần quyền admin. Đăng ký lại mỗi lần Orbit khởi động để luôn trỏ đúng exe; tắt trong Cài đặt thì gỡ. Chỉ gỡ các khóa do Orbit tạo, và không ghi đè mục "Orbit" của chương trình khác.
+  - Windows 11: nằm trong **Hiển thị thêm tùy chọn** (Shift + chuột phải mở thẳng). Menu rút gọn mới của Windows 11 cần gói MSIX có chữ ký số nên chưa làm.
+  - Chọn nhiều file: Explorer có thể mở Orbit một lần cho mỗi file. Orbit đầu tiên mở pipe chỉ cho người dùng hiện tại ngay khi khởi động; các tiến trình sau chuyển lệnh qua đó rồi thoát, và lệnh tới trong 0,4 giây được gộp thành một lượt.
+  - Menu dựng theo đuôi file nên Orbit kiểm tra nội dung trước khi chạy. Sai loại, thiếu codec hoặc sai số lượng file (Crop chỉ 1 file, Ghép từ 2 file) thì báo bằng thông báo khay, không chạy.
+  - Nếu xóa hoặc chuyển thư mục Orbit, hãy tắt tùy chọn này trước, nếu không menu sẽ trỏ tới exe không còn.
+- **Nơi lưu kết quả** (Cài đặt): cạnh file nguồn (mặc định), thư mục con `Orbit` cạnh file nguồn (không lồng `Orbit\Orbit`), hoặc một thư mục cố định. Nơi lưu được chốt lúc tác vụ vào hàng; không ghi đè, trùng tên vẫn thêm (1), (2)…
+- **Nhớ thiết lập lần trước** khi bấm Lưu: khung nền (gồm ảnh nền nếu file vẫn còn), chất lượng nén JPEG, cạnh dài và khóa tỷ lệ của Resize, tỷ lệ Crop, mức nén video, fps/độ rộng GIF. Cài đặt có nút **Đặt lại thiết lập công cụ**.
+- **Icon mới**: hành tinh xanh ngọc với vòng quỹ đạo và vệ tinh hổ phách, vẽ bằng vector và render riêng 10 cỡ từ 16 đến 256 px. Dùng cho exe, cửa sổ, taskbar và menu chuột phải; icon khay được vẽ đúng kích cỡ theo DPI.
+
 ## Thanh tiến trình góc phải
 
 - Tác vụ chạy quá 0,7 giây (OCR, PDF nhiều trang, Office, batch) hiện một bảng nhỏ ở góc phải dưới, đúng vị trí thông báo hoàn tất. Bảng gồm: tên file, thanh tiến độ, "Công cụ · %" và số thứ tự trong lượt (ví dụ 2/8).
@@ -69,9 +81,10 @@ Dùng bộ xử lý media có sẵn của Windows (Media Foundation qua Windows.
 
 ## Kiểm chứng
 
-- Build 0 cảnh báo/0 lỗi; 88/88 kiểm thử mặc định, có 14 bài audio/video trên fixture tự sinh bằng Windows (video đỏ→xanh có tiếng, WAV tone). Các bài này đo thời lượng, kích thước, màu khung hình tại thời điểm chọn, đoạn cắt, số khung GIF, thứ tự ghép, hủy không để file dở, và cửa sổ Cắt đoạn thật. Máy không có Media Foundation (Windows Server trên CI) sẽ ghi SKIP cho phần chạy media. Thanh tiến trình được kiểm tra với tác vụ OCR thật: hiện ở góc phải, không lấy focus, tự ẩn khi xong và khi cửa sổ chính ở phía trước. Có thêm bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
+- Build 0 cảnh báo/0 lỗi; 100/100 kiểm thử mặc định. Phần mới được kiểm tra gồm: Registry của menu chuột phải trên một khóa thử riêng, pipe giữa hai tiến trình, gộp lệnh, nơi lưu, nhớ thiết lập trên editor thật, và icon. Ngoài ra có 14 bài audio/video trên fixture tự sinh bằng Windows (video đỏ→xanh có tiếng, WAV tone). Các bài này đo thời lượng, kích thước, màu khung hình tại thời điểm chọn, đoạn cắt, số khung GIF, thứ tự ghép, hủy không để file dở, và cửa sổ Cắt đoạn thật. Máy không có Media Foundation (Windows Server trên CI) sẽ ghi SKIP cho phần chạy media. Thanh tiến trình được kiểm tra với tác vụ OCR thật: hiện ở góc phải, không lấy focus, tự ẩn khi xong và khi cửa sổ chính ở phía trước. Có thêm bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
 - Khung nền: kiểm tra từng pixel ảnh gốc được giữ 1:1, màu viền, chuyển màu, 4 họa tiết, nền ảnh có và không mờ, ảnh gốc mờ, bo góc, đổ bóng, JPEG. Editor WPF thật được kiểm tra luồng đổi tỷ lệ, chọn mẫu chuyển màu, từ chối mã màu sai và lưu ra ảnh đúng kích thước.
 - Phục hồi bằng tiến trình thật (`scripts/test-updater.ps1 -RecoverOnly`): install bị trộn phiên bản được trả về 0.0.1, file mới thêm bị gỡ, file người dùng giữ nguyên.
+- Đã thử menu chuột phải thật: Explorer liệt kê "Orbit ›" với submenu đúng cho JPEG và MP4; 3 tiến trình `--tool` khởi động cùng lúc khi Orbit chưa chạy cho ra 3 file và chỉ một Orbit ở khay.
 - Đã chạy `dist/Orbit/Orbit.exe --render-previews` với DOTNET_ROOT trỏ sai: render giao diện, WebP, PDF, OCR và media (dựng video, nén 240p, lưu khung hình) đều đạt.
 - Chưa kiểm chứng trên máy này:
   - Hai kịch bản helper có ký (nâng phiên bản và rollback): cần private key, sẽ chạy trên CI khi push.

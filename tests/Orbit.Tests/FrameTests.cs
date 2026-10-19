@@ -207,3 +207,33 @@ internal static partial class Program
         app.Queue.Jobs.Clear();
     }
 }
+
+internal static partial class Program
+{
+    // Writes assets/orbit.ico plus a preview sheet (each size at 1:1, then 4× pixel zoom of the small ones).
+    private static int MakeIcon(string ico)
+    {
+        Orbit.App.UI.OrbitIcon.WriteIco(ico);
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            foreach (var (background, top) in new[] { (Color.FromRgb(0xF3, 0xF3, 0xF3), 0), (Color.FromRgb(0x20, 0x20, 0x20), 300) })
+            {
+                dc.DrawRectangle(new SolidColorBrush(background), null, new Rect(0, top, 1100, 300));
+                double x = 10;
+                foreach (var size in Orbit.App.UI.OrbitIcon.Sizes) { dc.DrawImage(Orbit.App.UI.OrbitIcon.Render(size), new Rect(x, top + 10, size, size)); x += size + 12; }
+                x = 10;
+                foreach (var size in new[] { 16, 20, 24, 32 })
+                {
+                    var zoom = new TransformedBitmap(Orbit.App.UI.OrbitIcon.Render(size), new ScaleTransform(4, 4));
+                    RenderOptions.SetBitmapScalingMode(visual, BitmapScalingMode.NearestNeighbor);
+                    dc.DrawImage(zoom, new Rect(x, top + 160, size * 4, size * 4)); x += size * 4 + 16;
+                }
+            }
+        }
+        var sheet = new RenderTargetBitmap(1100, 600, 96, 96, PixelFormats.Pbgra32); sheet.Render(visual);
+        var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(sheet));
+        using (var file = File.Create(Path.ChangeExtension(ico, ".preview.png"))) encoder.Save(file);
+        Console.WriteLine("Wrote " + ico); return 0;
+    }
+}

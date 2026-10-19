@@ -14,6 +14,9 @@
 - Cửa sổ media (Cắt đoạn, Khung hình, GIF ngắn, Nén video) dùng khung editor 900 × 640:
   - Bên trái: khung hình xem trước (ảnh tĩnh giải mã tại vị trí chọn; file chỉ có âm thanh hiện biểu tượng ♪), thanh thời gian (hai tay nắm ở chế độ đoạn), nút Phát thử và "Đầu/Cuối = tại đây".
   - Cột phải: ô thời gian m:ss.fff và các lựa chọn fps/độ rộng/độ phân giải/chất lượng có trạng thái chọn, kèm tóm tắt đầu ra.
+- Menu chuột phải: "Orbit ›" có icon, mục đầu "Mở menu tròn Orbit…" và đường phân cách, rồi công cụ của loại file, ZIP/SHA-256 ở cuối sau một đường phân cách. Nhãn dạng "Chuyển sang PNG", "Xuất các trang ra JPEG".
+- Icon: hành tinh xanh ngọc #5FF2D6 → #1C2E63, vòng quỹ đạo nghiêng −24° màu bạc hà viền xanh đậm #12304F, vệ tinh hổ phách. Cỡ ≤ 24 px bỏ bóng/điểm sáng và làm dày vòng.
+- Cài đặt có: Nơi lưu kết quả (cạnh nguồn / thư mục con Orbit / thư mục cố định + Chọn…), menu chuột phải, Đặt lại thiết lập công cụ; nội dung cuộn được.
 - Khi thiếu codec, tâm menu ghi ngắn (ví dụ "Thiếu codec HEVC / Cài HEVC Video Extensions") và chỉ còn ZIP/SHA-256.
 
 0.4.1: Cài đặt và cửa sổ Cập nhật Orbit có dòng “Tác giả: Nguyễn Mạnh Quyết”; không hiển thị địa chỉ nguồn tải cập nhật.

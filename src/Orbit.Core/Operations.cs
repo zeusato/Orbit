@@ -10,7 +10,8 @@ public enum ToolKind { Png, Jpeg, Webp, Bmp, Tiff, Gif, Ico, Resize, Crop, Rotat
 public enum JobState { Queued, Running, Completed, Cancelled, Failed }
 public sealed record CropRegion(int X, int Y, int Width, int Height);
 public sealed record ImageRequest(string Source, ToolKind Tool, int Width = 0, int Height = 0,
-    bool KeepAspect = true, int Quality = 85, CropRegion? Crop = null, string[]? Sources = null, FrameOptions? Frame = null, MediaOptions? Media = null);
+    bool KeepAspect = true, int Quality = 85, CropRegion? Crop = null, string[]? Sources = null, FrameOptions? Frame = null, MediaOptions? Media = null,
+    string? OutputDirectory = null);
 
 public static class ToolCatalog
 {
@@ -170,5 +171,32 @@ public static class OutputFiles
             catch (IOException) when (File.Exists(candidate) || Directory.Exists(candidate)) { }
         }
         throw new IOException("Đã có quá nhiều file trùng tên. Hãy đổi tên file nguồn.");
+    }
+}
+
+public static class OutputLocation
+{
+    public const string Beside = "Beside", Subfolder = "Subfolder", Folder = "Folder";
+    // Subfolder never nests: a source already inside an "Orbit" folder writes beside itself.
+    public static string For(string source, string mode, string? folder)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(source))!;
+        return mode switch
+        {
+            Subfolder => string.Equals(Path.GetFileName(directory), "Orbit", StringComparison.OrdinalIgnoreCase) ? directory : Path.Combine(directory, "Orbit"),
+            Folder when !string.IsNullOrWhiteSpace(folder) => Path.GetFullPath(folder),
+            _ => directory
+        };
+    }
+    public static string Prepare(ImageRequest request)
+    {
+        var directory = request.OutputDirectory ?? Path.GetDirectoryName(Path.GetFullPath(request.Source))!;
+        if (!Directory.Exists(directory))
+        {
+            try { Directory.CreateDirectory(directory); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            { throw new IOException("Không tạo được thư mục lưu kết quả " + directory + ". Kiểm tra lại Nơi lưu trong Cài đặt.", error); }
+        }
+        return directory;
     }
 }

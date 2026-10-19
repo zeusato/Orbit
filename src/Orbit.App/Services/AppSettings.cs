@@ -22,6 +22,12 @@ public sealed class AppSettings
         MenuHotkeyChoice = hotkey.ToString();
         HotkeyNeedsShift = hotkey == MenuHotkey.CtrlShiftSpace; // Compatibility with pre-0.2.2 settings.
     }
+    // Last options per tool, written when the user saves in that tool's window.
+    public ToolDefaults Defaults { get; set; } = new();
+    // Output: "Beside" (next to the source), "Subfolder" (an "Orbit" folder next to it) or "Folder" (OutputFolder).
+    public string OutputMode { get; set; } = "Beside";
+    public string? OutputFolder { get; set; }
+    public bool ShellMenu { get; set; } = true;
     public bool Glass { get; set; } = true;
     public string Theme { get; set; } = "System";
     public bool StartupPromptCompleted { get; set; }
@@ -74,4 +80,17 @@ public sealed class AppSettings
             else key.DeleteValue("Orbit", false);
         }
     }
+}
+
+public sealed class ToolDefaults
+{
+    public FrameOptions? Frame { get; set; }
+    public int? JpegQuality { get; set; }
+    public int? ResizeLongSide { get; set; }
+    public bool ResizeKeepAspect { get; set; } = true;
+    public string? CropAspect { get; set; }
+    public int? VideoHeight { get; set; }
+    public MediaQuality? VideoQuality { get; set; }
+    public int? GifFps { get; set; }
+    public int? GifWidth { get; set; }
 }

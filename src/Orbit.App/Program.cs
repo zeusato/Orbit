@@ -16,12 +16,15 @@ public static class Program
     {
         var verify = args.Length >= 2 && args[0] == "--render-previews";
         using var mutex = new Mutex(true, "Local\\Orbit.Native." + Environment.UserName, out var first);
+        if (!first && !verify && ShellCommand.TryParse(args, out var shell))
+            return ShellPipe.Send(shell) ? 0 : 1;
         if (!first && !verify)
         {
             try { using var signal = EventWaitHandle.OpenExisting("Local\\Orbit.Show." + Environment.UserName); signal.Set(); }
             catch (WaitHandleCannotBeOpenedException) { }
             return 0;
         }
+        if (!verify) ShellInbox.Start();
         var app = new OrbitApplication(args);
         try { return app.Run(); }
         catch (Exception error)
@@ -59,7 +62,7 @@ public sealed class OrbitApplication : Application
         base.OnStartup(e); Theme.Apply(Settings); Theme.InstallStyles();
         // Diagnostic and test sessions keep no history on disk.
         var history = _args.Contains("--no-integrations") || _args.Contains("--render-previews") ? null : Path.Combine(AppSettings.DataDirectory, "history.json");
-        Queue = new JobQueue(Dispatcher, history); Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
+        Queue = new JobQueue(Dispatcher, history) { OutputFor = source => Settings.OutputMode == OutputLocation.Beside ? null : OutputLocation.For(source, Settings.OutputMode, Settings.OutputFolder) }; Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
         MainWindow = _home;
         // Progress for long jobs in the notification corner; hidden while the main window is in front.
         if (!_args.Contains("--render-previews"))
@@ -72,7 +75,7 @@ public sealed class OrbitApplication : Application
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => RenderPreviews(_args[1])); return;
         }
         if (!_args.Contains("--update-health") && TryRecoverInterruptedUpdate()) return;
-        _icon = CreateIcon();
+        _icon = OrbitIcon.TrayIcon(Math.Max(16, Forms.SystemInformation.SmallIconSize.Width));
         _tray = new Forms.NotifyIcon { Icon = _icon, Text = "Orbit · Công cụ xử lý file", Visible = true };
         var context = new Forms.ContextMenuStrip();
         context.Items.Add("Mở Orbit", null, (_, _) => Dispatcher.BeginInvoke(ShowHome));
@@ -106,7 +109,12 @@ public sealed class OrbitApplication : Application
         _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\Orbit.Show." + Environment.UserName);
         _showRegistration = ThreadPool.RegisterWaitForSingleObject(_showSignal, (_, _) => Dispatcher.BeginInvoke(ShowHome), null, Timeout.Infinite, false);
         SystemEvents.UserPreferenceChanged += SystemThemeChanged;
-        if (!_args.Contains("--background"))
+        _shellBatch.Tick += (_, _) => FlushShell();
+        ShellInbox.Attach(command => Dispatcher.BeginInvoke(() => QueueShell(command)));
+        SyncShellMenu();
+        var fromShell = ShellCommand.TryParse(_args, out var launch);
+        if (fromShell) QueueShell(launch);
+        if (!_args.Contains("--background") && !fromShell)
         {
             ShowHome();
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, OfferStartup);
@@ -152,6 +160,54 @@ public sealed class OrbitApplication : Application
         }
         catch (Exception error) { _home?.SetStatus("Chưa khôi phục được bản cập nhật bị gián đoạn: " + error.Message); return false; }
         finally { helper?.Dispose(); }
+    }
+
+    private readonly List<ShellCommand> _shellPending = [];
+    private readonly DispatcherTimer _shellBatch = new() { Interval = TimeSpan.FromMilliseconds(400) };
+    // Requests from Explorer arrive one process per selected file; wait briefly and run them as one batch.
+    public void QueueShell(ShellCommand command) { _shellPending.Add(command); _shellBatch.Stop(); _shellBatch.Start(); }
+    private void FlushShell()
+    {
+        _shellBatch.Stop();
+        var batch = ShellCommand.Merge(_shellPending); _shellPending.Clear();
+        foreach (var command in batch) RunShellCommand(command);
+    }
+    public async void RunShellCommand(ShellCommand command)
+    {
+        var files = command.Files.Where(File.Exists).ToArray();
+        if (files.Length == 0) { Notify("Không tìm thấy file được chọn."); return; }
+        if (command.Tool is not ToolKind tool)
+        {
+            // Ring menu at the pointer, in click mode: the right-click already ended any drag.
+            Native.GetCursorPos(out var cursor); Menu.ShowMenu(cursor, files); return;
+        }
+        try
+        {
+            if (!ToolCatalog.SupportsCount(tool, files.Length))
+            { Notify(tool is ToolKind.PdfMerge or ToolKind.AudioMerge ? $"{ToolCatalog.Label(tool)}: chọn từ 2 file trở lên." : $"{ToolCatalog.Label(tool)} chỉ nhận một file mỗi lần."); return; }
+            // The context menu is chosen by extension; check the content before running.
+            var resolved = await Task.Run(() => FileToolResolver.ResolveWithNotice(files));
+            if (!resolved.Tools.Contains(tool))
+            { Notify($"{ToolCatalog.Label(tool)} không dùng được cho file này." + (resolved.Notice == null ? "" : " " + resolved.Notice.Replace('\n', ' '))); return; }
+            RunTool(tool, files);
+        }
+        catch (Exception error) { Notify("Không đọc được file: " + error.Message); }
+    }
+    private void Notify(string message)
+    {
+        if (_tray != null && _home?.IsVisible != true) { _tray.BalloonTipTitle = "Orbit"; _tray.BalloonTipText = message; _tray.ShowBalloonTip(4000); }
+        else { ShowHome(); _home?.SetStatus(message); }
+    }
+    public void SyncShellMenu()
+    {
+        if (_args.Contains("--no-integrations")) return;
+        var enabled = Settings.ShellMenu; var exe = Environment.ProcessPath!;
+        Task.Run(() =>
+        {
+            try { if (enabled) ShellMenu.Register(exe); else ShellMenu.Unregister(); }
+            catch (Exception error) when (error is UnauthorizedAccessException or IOException or System.Security.SecurityException)
+            { Dispatcher.BeginInvoke(() => _home?.SetStatus("Chưa cập nhật được menu chuột phải: " + error.Message)); }
+        });
     }
 
     private void OfferStartup()
@@ -239,25 +295,11 @@ public sealed class OrbitApplication : Application
     protected override void OnExit(ExitEventArgs e)
     {
         SystemEvents.UserPreferenceChanged -= SystemThemeChanged;
-        Updates?.Dispose(); _hotkey?.Dispose(); _showRegistration?.Unregister(null); _showSignal?.Dispose();
+        ShellInbox.Stop.Cancel(); Updates?.Dispose(); _hotkey?.Dispose(); _showRegistration?.Unregister(null); _showSignal?.Dispose();
         if (_tray != null) { _tray.Visible = false; _tray.Dispose(); }
         _icon?.Dispose(); Queue?.Dispose(); base.OnExit(e);
     }
 
-    private static System.Drawing.Icon CreateIcon()
-    {
-        using var bitmap = new System.Drawing.Bitmap(32, 32);
-        using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
-        {
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(94, 222, 199), 2.5f);
-            graphics.DrawEllipse(pen, 5, 5, 22, 22); graphics.DrawEllipse(pen, 2, 11, 28, 10);
-        }
-        var handle = bitmap.GetHicon();
-        try { using var icon = System.Drawing.Icon.FromHandle(handle); return (System.Drawing.Icon)icon.Clone(); }
-        finally { DestroyIcon(handle); }
-    }
-    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr icon);
 
     private async void RenderPreviews(string folder)
     {

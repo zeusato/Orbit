@@ -9,10 +9,11 @@
 - Tự phục hồi khi cập nhật bị ngắt giữa chừng.
 - Tự dọn backup và bản tải cũ.
 - Thanh tiến trình ở góc phải cho tác vụ chạy lâu, có Hủy/Mở Orbit, không lấy focus.
+- Menu chuột phải Orbit với submenu theo loại file (gộp lệnh khi chọn nhiều file), nơi lưu tùy chọn, nhớ thiết lập công cụ, icon mới.
 - Âm thanh/video bằng bộ xử lý media của Windows: MP4, nén video, cắt đoạn, tách/chuyển MP3/M4A/WAV, khung hình PNG, GIF ngắn, ghép âm thanh. Kiểm tra codec trước khi hiện công cụ; giới hạn 2 GB/1 giờ; chạy trên hàng đợi riêng.
 - Lưu lịch sử tác vụ qua các lần mở app.
 
-Build 0 warning/error; 88/88 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
+Build 0 warning/error; 100/100 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
 
 Chưa kiểm chứng trên máy này:
 - Hai kịch bản helper có ký: cần private key, chạy trên CI khi push.

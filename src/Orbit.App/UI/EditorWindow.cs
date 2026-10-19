@@ -44,6 +44,9 @@ public sealed class EditorWindow : GlassWindow
         foreach (var button in toolbar.Children.OfType<Button>()) { button.Padding = new Thickness(9, 5, 9, 5); button.MinHeight = 32; }
         AutomationProperties.SetName((Button)toolbar.Children[0], "Thu nhỏ ảnh"); AutomationProperties.SetName((Button)toolbar.Children[1], "Phóng to ảnh");
         preview.Children.Add(toolbar);
+        var defaults = app.Settings.Defaults;
+        _quality.Value = Math.Clamp(defaults.JpegQuality ?? 85, 30, 95); _lock.IsChecked = defaults.ResizeKeepAspect;
+        if (tool == ToolKind.Frame) _frame = RememberedFrame(defaults.Frame);
         if (tool == ToolKind.Crop) { _crop = _viewer; BuildCrop(); }
         else if (tool == ToolKind.Resize) BuildResize(); else if (tool == ToolKind.Frame) BuildFrame(); else BuildCompress();
         var caption = Ui.Text($"{Path.GetFileName(files[0])}\nẢnh gốc · {image.PixelWidth} × {image.PixelHeight} px" + (files.Length > 1 ? $" · {files.Length} file" : ""), 12, true);
@@ -76,7 +79,7 @@ public sealed class EditorWindow : GlassWindow
         foreach (var size in new[] { 1080, 1920, 2560 })
         { var button = Ui.Button(size.ToString(), () => SetLongSide(size)); button.Margin = new Thickness(0, 0, 5, 6); button.Padding = new Thickness(10, 7, 10, 7); presets.Children.Add(button); }
         _controls.Children.Add(presets); Field("Rộng (px)", _width); Field("Cao (px)", _height);
-        _controls.Children.Add(_lock); SetLongSide(Math.Min(1920, Math.Max(_image.PixelWidth, _image.PixelHeight)));
+        _controls.Children.Add(_lock); SetLongSide(Orbit.Settings.Defaults.ResizeLongSide is int remembered and > 0 and <= 32768 ? remembered : Math.Min(1920, Math.Max(_image.PixelWidth, _image.PixelHeight)));
         _width.TextChanged += (_, _) => SyncSize(true); _height.TextChanged += (_, _) => SyncSize(false);
         _lock.Checked += (_, _) => SyncSize(true);
         _controls.Children.Add(Ui.Button("Kích thước gốc", () => SetLongSide(Math.Max(_image.PixelWidth, _image.PixelHeight))));
@@ -109,7 +112,7 @@ public sealed class EditorWindow : GlassWindow
     private void BuildCompress()
     {
         Heading("Chất lượng JPEG");
-        var value = Ui.Text("85%", 24); _controls.Children.Add(value); _controls.Children.Add(_quality);
+        var value = Ui.Text($"{(int)_quality.Value}%", 24); _controls.Children.Add(value); _controls.Children.Add(_quality);
         AutomationProperties.SetName(_quality, "Chất lượng JPEG"); _quality.ValueChanged += (_, _) => { value.Text = ((int)_quality.Value) + "%"; SchedulePreview(); };
         _controls.Children.Add(Ui.Row(Ui.Button("60%", () => _quality.Value = 60), Ui.Button("85%", () => _quality.Value = 85), Ui.Button("95%", () => _quality.Value = 95)));
         _showOriginal = new CheckBox { Content = "Xem ảnh gốc" };
@@ -153,6 +156,7 @@ public sealed class EditorWindow : GlassWindow
     private static readonly string[] Palette = ["#FFFFFF", "#F4EFE6", "#1F2328", "#167D72", "#F2C4CE", "#E9C46A", "#8EC5FC", "#B8A9F5"];
     private static readonly (string Name, string From, string To)[] Gradients = [("Bình minh", "#FBC2EB", "#A6C1EE"), ("Bạc hà", "#D4FC79", "#96E6A1"), ("Hoàng hôn", "#FF9A8B", "#FAD0C4"), ("Đêm", "#141E30", "#243B55")];
     private FrameOptions _frame = new();
+    private string? _cropAspect;
     private BitmapSource? _frameThumb, _pictureThumb;
     private readonly StackPanel _backgroundPanel = new();
     private readonly System.Windows.Threading.DispatcherTimer _frameTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
@@ -223,7 +227,7 @@ public sealed class EditorWindow : GlassWindow
         _summary.Margin = new Thickness(0, 10, 0, 0); _controls.Children.Add(_summary);
         var note = Ui.Text("Ảnh gốc giữ nguyên từng pixel; chỉ phần khung bên ngoài được tạo thêm. Với nhiều file, khung tính theo tỷ lệ của từng ảnh.", 12, true);
         note.Margin = new Thickness(0, 12, 0, 0); _controls.Children.Add(note);
-        RefreshChoices(); Loaded += (_, _) => RefreshFrame();
+        RefreshChoices(); Loaded += async (_, _) => { RefreshFrame(); if (_frame.Background == FrameBackground.Picture && _frame.Picture != null) await LoadPicture(_frame.Picture); };
     }
     private void BuildBackgroundPanel()
     {
@@ -262,11 +266,27 @@ public sealed class EditorWindow : GlassWindow
         }
         RefreshChoices();
     }
+    // A remembered picture background may have been moved or deleted since; fall back to a plain colour.
+    private static FrameOptions RememberedFrame(FrameOptions? saved)
+    {
+        if (saved == null) return new();
+        try { saved.Validate(); } catch (Exception error) when (error is ArgumentException or FormatException) { return new(); }
+        return saved.Background == FrameBackground.Picture && !File.Exists(saved.Picture) ? saved with { Background = FrameBackground.Solid, Picture = null } : saved;
+    }
+    private void Remember(Action<Services.ToolDefaults> update)
+    {
+        try { update(Orbit.Settings.Defaults); Orbit.Settings.Save(); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { } // The job still runs; only the preference is not kept.
+    }
     private async void PickPicture()
     {
         var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Chọn ảnh nền", Filter = "Ảnh|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.heic;*.heif;*.tga" };
         if (dialog.ShowDialog(this) != true) return;
-        var path = dialog.FileName; _error.Text = "Đang tải ảnh nền…";
+        await LoadPicture(dialog.FileName);
+    }
+    private async Task LoadPicture(string path)
+    {
+        _error.Text = "Đang tải ảnh nền…";
         try
         {
             var thumb = await Task.Run(() => { var engine = new global::Orbit.App.Imaging.ImageEngine(); return engine.Thumbnail(engine.Load(path), 1100); });
@@ -293,7 +313,7 @@ public sealed class EditorWindow : GlassWindow
         var presets = new WrapPanel();
         foreach (var option in new (string Name, double? Ratio)[] { ("Tự do", null), ("Gốc", (double)_image.PixelWidth / _image.PixelHeight), ("1:1", 1), ("4:5", .8), ("16:9", 16d / 9), ("9:16", 9d / 16) })
         {
-            var button = Ui.Button(option.Name, () => { _crop!.SetAspect(option.Ratio); RefreshRatios(); });
+            var button = Ui.Button(option.Name, () => { _crop!.SetAspect(option.Ratio); _cropAspect = option.Name; RefreshRatios(); });
             button.Padding = new Thickness(10, 7, 10, 7); button.Margin = new Thickness(0, 0, 5, 6); presets.Children.Add(button); _ratios.Add((button, option.Ratio));
         }
         _controls.Children.Add(presets);
@@ -305,6 +325,8 @@ public sealed class EditorWindow : GlassWindow
         _controls.Children.Add(Ui.Button("Đặt lại vùng cắt", () => { _crop.ResetSelection(); _crop.FitImage(); RefreshRatios(); }));
         _summary.Margin = new Thickness(0, 10, 0, 0); _summary.Text = $"Vùng cắt · {_image.PixelWidth} × {_image.PixelHeight} px"; _controls.Children.Add(_summary);
         var tip = Ui.Text("Kéo góc/cạnh để chỉnh khung; kéo bên trong để dịch vùng. Shift + kéo để vẽ vùng mới. Mũi tên: 1 px · Shift: 10 px.", 12, true); tip.Margin = new Thickness(0, 12, 0, 0); _controls.Children.Add(tip); RefreshRatios();
+        if (presets.Children.OfType<Button>().FirstOrDefault(b => Equals(b.Content, Orbit.Settings.Defaults.CropAspect)) is { } remembered && !Equals(remembered.Content, "Tự do"))
+            remembered.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     }
     private void RefreshRatios()
     {
@@ -340,9 +362,15 @@ public sealed class EditorWindow : GlassWindow
             if (_tool == ToolKind.Frame)
             {
                 _ = FrameLayout.Compute(_image.PixelWidth, _image.PixelHeight, _frame);
-                Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, Quality: 92, Frame: _frame))); Close(); return;
+                Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, Quality: 92, Frame: _frame))); Remember(d => d.Frame = _frame); Close(); return;
             }
             Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, w, h, _lock.IsChecked == true, (int)_quality.Value, _crop?.Region)));
+            Remember(d =>
+            {
+                if (_tool == ToolKind.Resize) { d.ResizeLongSide = Math.Max(w, h); d.ResizeKeepAspect = _lock.IsChecked == true; }
+                else if (_tool == ToolKind.Compress) d.JpegQuality = (int)_quality.Value;
+                else if (_tool == ToolKind.Crop) d.CropAspect = _cropAspect ?? d.CropAspect;
+            });
             Close();
         }
         catch (Exception ex) { _error.Text = ex.Message; }
