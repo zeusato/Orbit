@@ -127,6 +127,39 @@ internal static partial class Program
         second.Dispose();
     }
 
+    private static async Task CheckProgressToast(OrbitApplication app)
+    {
+        var toast = app.Progress!; var pdf = Path.Combine(_folder, "ocr-vietnamese.pdf");
+        app.MainWindow.Hide();
+        app.Queue.Add([new ImageRequest(pdf, ToolKind.PdfText)]);
+        var seen = false; double percent = 0; var activated = false; var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (app.Queue.HasPending && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(50);
+            if (toast.IsVisible) { seen = true; percent = Math.Max(percent, toast.Bar.Value); activated |= toast.IsActive; }
+        }
+        await Task.Delay(400);
+        Check("Long job shows a non-activating progress panel in the notification corner", () =>
+        {
+            Assert(seen, "progress panel appeared for a multi-second OCR job");
+            Assert(!activated, "panel never takes focus");
+            var area = SystemParameters.WorkArea;
+            Assert(Math.Abs(toast.Left + toast.ActualWidth - area.Right) < 12 && Math.Abs(toast.Top + toast.ActualHeight - area.Bottom) < 12, "bottom-right of work area");
+            Assert(!toast.IsVisible && app.Queue.Jobs.First().State == JobState.Completed, "panel hides after completion");
+        });
+        app.Queue.Jobs.Clear();
+        app.ShowHome(); app.MainWindow.Activate(); await Task.Delay(100);
+        if (app.MainWindow.IsActive)
+        {
+            app.Queue.Add([new ImageRequest(pdf, ToolKind.PdfText)]);
+            var shown = false; deadline = DateTime.UtcNow.AddSeconds(30);
+            while (app.Queue.HasPending && DateTime.UtcNow < deadline) { await Task.Delay(50); shown |= toast.IsVisible && app.MainWindow.IsActive; }
+            Check("Progress panel stays hidden while the Orbit window is in front", () => Assert(!shown, "main window list already shows progress"));
+            app.Queue.Jobs.Clear();
+        }
+        else Console.WriteLine("SKIP Progress panel suppression (test window could not take foreground)");
+    }
+
     private static string WriteSolid(string name, int width, int height, byte r, byte g, byte b)
     {
         var pixels = new byte[width * height * 4];

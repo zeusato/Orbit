@@ -42,6 +42,7 @@ public sealed class OrbitApplication : Application
     private RegisteredWaitHandle? _showRegistration;
     private bool _openingEditor;
     private HomeWindow? _home;
+    public ProgressToast? Progress { get; private set; }
     public AppSettings Settings { get; } = AppSettings.Load();
     public JobQueue Queue { get; private set; } = null!;
     public RadialWindow Menu { get; private set; } = null!;
@@ -60,6 +61,9 @@ public sealed class OrbitApplication : Application
         var history = _args.Contains("--no-integrations") || _args.Contains("--render-previews") ? null : Path.Combine(AppSettings.DataDirectory, "history.json");
         Queue = new JobQueue(Dispatcher, history); Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
         MainWindow = _home;
+        // Progress for long jobs in the notification corner; hidden while the main window is in front.
+        if (!_args.Contains("--render-previews"))
+            Progress = new ProgressToast(Queue, ShowHome, () => UpdateInProgress || (_home.IsVisible && _home.IsActive && _home.WindowState != WindowState.Minimized));
         // Diagnostic mode also lets integration tests exercise the real WPF views
         // without installing global hooks or a notification-area icon.
         if (_args.Contains("--no-integrations")) { ShowHome(); return; }
@@ -167,6 +171,7 @@ public sealed class OrbitApplication : Application
     public void RefreshTheme()
     {
         Theme.Apply(Settings); Menu.RefreshBackdrop();
+        Progress?.RefreshTheme();
         foreach (Window window in Windows) if (window is GlassWindow glass) glass.RefreshBackdrop();
         _home?.UpdateInstruction();
     }
@@ -258,6 +263,11 @@ public sealed class OrbitApplication : Application
             Menu.ShowMenu(new Native.Point(700, 420), [sample]); await Menu.Detection; SaveWindow(Menu, Path.Combine(folder, "menu-dark.png")); Menu.HideMenu();
             var editor = new EditorWindow(this, ToolKind.Crop, [sample], image); editor.Show(); SaveWindow(editor, Path.Combine(folder, "crop-dark.png")); editor.Close();
             var frame = new EditorWindow(this, ToolKind.Frame, [sample], image); frame.Show(); await Task.Delay(400); SaveWindow(frame, Path.Combine(folder, "frame-dark.png")); frame.Close();
+            var toast = new ProgressToast(Queue, ShowHome, () => false);
+            Queue.Add(Enumerable.Range(0, 8).Select(_ => new ImageRequest(pdf, ToolKind.PdfText)));
+            for (int i = 0; i < 200 && !(toast.IsVisible && Queue.Jobs.Count(j => !j.CanCancel) >= 2); i++) await Task.Delay(50);
+            if (toast.IsVisible) SaveWindow(toast, Path.Combine(folder, "progress-dark.png"));
+            Queue.CancelAll(); while (Queue.HasPending) await Task.Delay(50); toast.Close();
             Settings.Theme = "Light"; RefreshTheme(); SaveWindow(_home, Path.Combine(folder, "home-light.png"));
             File.WriteAllText(Path.Combine(folder, "render-result.txt"), $"Native WPF renders and WebP/PDF/OCR runtime smoke checks completed. DWM accepted: home={_home.BackdropAvailable}, menu={Menu.BackdropAvailable}");
             Shutdown(0);

@@ -204,6 +204,7 @@ internal static partial class Program
                 await CheckEditors(app);
                 await CheckFrameEditor(app);
                 await CheckHistory(app);
+                await CheckProgressToast(app);
                 app.Menu.ShowMenu(new Orbit.App.Interop.Native.Point(700, 420), [Path.Combine(_folder, "text-layer.pdf")]);
                 await app.Menu.Detection;
                 Assert(app.Menu.VisibleTools.Contains(ToolKind.PdfWord), "text PDF offers Word in real WPF menu");
@@ -226,6 +227,7 @@ internal static partial class Program
                 Descendants<Button>(app.Menu).First().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 app.RunTool(ToolKind.Png, [Path.Combine(_folder, "missing-ui.jpg")]);
                 app.MainWindow.UpdateLayout();
+                deadline = DateTime.UtcNow.AddSeconds(30); // Measure only this conversion, not the editor and progress checks before it.
                 timer.Start();
             }
             catch (Exception error) { failure = error; app.Shutdown(1); }

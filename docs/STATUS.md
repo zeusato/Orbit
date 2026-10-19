@@ -8,9 +8,10 @@
 - Công cụ **Khung nền**: viền, tỷ lệ, nền màu/chuyển màu/họa tiết/ảnh/ảnh gốc mờ, bo góc, đổ bóng.
 - Tự phục hồi khi cập nhật bị ngắt giữa chừng.
 - Tự dọn backup và bản tải cũ.
+- Thanh tiến trình ở góc phải cho tác vụ chạy lâu, có Hủy/Mở Orbit, không lấy focus.
 - Lưu lịch sử tác vụ qua các lần mở app.
 
-Build 0 warning/error; 72/72 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
+Build 0 warning/error; 74/74 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
 
 Chưa kiểm chứng trên máy này:
 - Hai kịch bản helper có ký: cần private key, chạy trên CI khi push.

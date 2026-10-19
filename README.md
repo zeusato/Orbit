@@ -24,6 +24,8 @@ Lần mở đầu, Orbit hỏi **Chạy cùng Windows?** Chọn **Bật cùng Wi
 
 Cũng có thể chọn file hoặc thả file vào cửa sổ chính rồi bấm công cụ. Menu nhận dạng nội dung và chỉ hiện công cụ phù hợp: JPEG không có lựa chọn chuyển sang JPEG. Tối đa sáu ô mỗi trang; giữ trên **Thêm…** khoảng 650 ms để sang trang mà vẫn kéo file, rồi rê sang công cụ muốn thả. Nếu thả vào Thêm…, bấm tiếp công cụ ở trang sau. Khi file đang nhận diện, có thể thả để giữ menu mở rồi chọn sau; chưa chạy tác vụ nào. Phím 1–6 chọn ô theo chiều kim đồng hồ từ trên cùng; Esc hủy. Vùng tâm và khe giữa các ô khi menu đã sẵn sàng không chạy tác vụ.
 
+Tác vụ chạy quá 0,7 giây hiện một bảng tiến trình nhỏ ở góc phải dưới màn hình: tên file, phần trăm, số thứ tự trong lượt, nút **Mở Orbit** và **Hủy**. Bảng không lấy focus và ẩn khi cửa sổ Orbit đang ở phía trước; khi xong sẽ hiện thông báo hoàn tất như trước.
+
 ## Chỉnh ảnh
 
 - Crop, resize và nén: cuộn để zoom tại con trỏ; nút **Vừa khung** và **100%** đổi mức xem. Resize/nén kéo ảnh để pan; crop dùng **Space + kéo** hoặc chuột giữa.
@@ -72,7 +74,7 @@ SDK .NET 10.0.402 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/pack
 .\scripts\run.ps1
 ```
 
-72 kiểm thử mặc định; thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
+74 kiểm thử mặc định; thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
 
 `--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt.
 

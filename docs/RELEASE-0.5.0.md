@@ -28,6 +28,14 @@ Công cụ mới trên menu ảnh, sau Nén JPEG. Orbit mở rộng khung ra xun
 - Bo góc 0–20% cạnh ngắn, đổ bóng mềm, xuất PNG hoặc JPEG 92%.
 - Có xem trước trực tiếp. Batch dùng cùng thông số, khung tính theo tỷ lệ của từng ảnh. Canvas vượt 60 MP hoặc 32768 px/cạnh bị từ chối kèm hướng dẫn.
 
+## Thanh tiến trình góc phải
+
+- Tác vụ chạy quá 0,7 giây (OCR, PDF nhiều trang, Office, batch) hiện một bảng nhỏ ở góc phải dưới, đúng vị trí thông báo hoàn tất. Bảng gồm: tên file, thanh tiến độ, "Công cụ · %" và số thứ tự trong lượt (ví dụ 2/8).
+- Có nút **Mở Orbit** và **Hủy** (với nhiều tác vụ là **Hủy tất cả**).
+- Bảng không lấy focus khỏi ứng dụng đang dùng. Bảng ẩn khi cửa sổ chính đang ở phía trước (danh sách đã có tiến độ), và tự đóng khi xong; sau đó thông báo hoàn tất như cũ.
+- Tác vụ ngắn không hiện bảng. Khi hàng đợi rỗng, timer dừng để không tốn CPU nền.
+- Tiến độ là con số công cụ báo về: OCR theo vùng/trang, PDF theo trang. Bước chưa báo % (Office COM, mở file) hiện thanh chạy liên tục, không phải phần trăm ước đoán.
+
 ## Cập nhật và lịch sử tác vụ
 
 - **Phục hồi khi cập nhật bị ngắt**: nếu helper dừng giữa lúc thay file (mất điện, bị kill), lần mở Orbit sau sẽ phát hiện journal dở. Orbit giao cho helper chép riêng khôi phục toàn bộ bản cũ rồi mở lại. Chỉ tự thử một lần; nếu thất bại, Orbit hiện hướng dẫn thay vì lặp lại.
@@ -36,7 +44,7 @@ Công cụ mới trên menu ảnh, sau Nén JPEG. Orbit mở rộng khung ra xun
 
 ## Kiểm chứng
 
-- Build 0 cảnh báo/0 lỗi; 72/72 kiểm thử mặc định, có bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
+- Build 0 cảnh báo/0 lỗi; 74/74 kiểm thử mặc định (gồm thanh tiến trình: hiện ở góc phải với tác vụ OCR thật, không lấy focus, tự ẩn khi xong và khi cửa sổ chính ở phía trước), có bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
 - Khung nền: kiểm tra từng pixel ảnh gốc được giữ 1:1, màu viền, chuyển màu, 4 họa tiết, nền ảnh có và không mờ, ảnh gốc mờ, bo góc, đổ bóng, JPEG. Editor WPF thật được kiểm tra luồng đổi tỷ lệ, chọn mẫu chuyển màu, từ chối mã màu sai và lưu ra ảnh đúng kích thước.
 - Phục hồi bằng tiến trình thật (`scripts/test-updater.ps1 -RecoverOnly`): install bị trộn phiên bản được trả về 0.0.1, file mới thêm bị gỡ, file người dùng giữ nguyên.
 - Đã chạy `dist/Orbit/Orbit.exe --render-previews` với DOTNET_ROOT trỏ sai: render giao diện, WebP, PDF và OCR đều đạt.

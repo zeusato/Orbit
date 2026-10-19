@@ -10,6 +10,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Build hoặc kiểm thử thất bại.' }
 Push-Location $orbitRoot
 try {
     # Publish into a clean folder so no file from an earlier build enters the release ZIP.
+    # Never half-delete a copy someone is running: locked DLLs survive while data files vanish.
+    $orbitDist = [IO.Path]::GetFullPath((Join-Path $orbitRoot 'dist/Orbit'))
+    $orbitRunning = @(Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith($orbitDist + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) })
+    if ($orbitRunning.Count -gt 0) { throw "Đang chạy $($orbitRunning[0].ProcessName) từ dist/Orbit (PID $($orbitRunning[0].Id)). Thoát Orbit trước khi đóng gói." }
     if (Test-Path -LiteralPath 'dist/Orbit') { Remove-Item -LiteralPath 'dist/Orbit' -Recurse -Force }
     dotnet publish src/Orbit.App/Orbit.App.csproj -c Release -r win-x64 --artifacts-path $orbitBuild --self-contained true -p:SatelliteResourceLanguages=en -p:DebugType=None -p:DebugSymbols=false -o dist/Orbit --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Publish thất bại.' }
