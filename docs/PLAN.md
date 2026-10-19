@@ -1,5 +1,19 @@
 # Kế hoạch triển khai Orbit
 
+Âm thanh/video, Đại ca chốt ngày 19/10/2026; đã triển khai trong 0.5.0 (xem RELEASE-0.5.0.md), FFmpeg vẫn để sau:
+- **Công nghệ**: dùng bộ xử lý media có sẵn của Windows (Windows.Media.Transcoding/MediaComposition trên Media Foundation), không FFmpeg ở vòng đầu. Trước khi hiện công cụ, Orbit thử mở file; thiếu codec (HEVC, VP9/AV1, Windows N) thì báo cần cài gì.
+- **Công cụ vòng đầu**:
+  - Video → MP4 (H.264/AAC) và nén theo preset 1080p/720p/480p.
+  - Audio ↔ MP3/M4A/WAV; tách âm thanh từ video.
+  - Cửa sổ Cắt đoạn có xem trước, dùng chung cho cắt video/audio, chụp khung hình → PNG và GIF ngắn (≤ 20 giây).
+  - Ghép nhiều file audio theo tên.
+- **Giới hạn**: 2 GB và 1 giờ mỗi file. Kiểm tra ổ đĩa còn trống trước khi chạy; ghi file tạm rồi đổi tên; hủy thì xóa file tạm.
+- **Nền tảng**:
+  - Hàng đợi media riêng để không chặn ảnh/PDF; dùng bảng tiến trình góc phải.
+  - Nhận dạng theo nội dung file (ftyp, EBML, RIFF, ASF, ID3, fLaC, OggS).
+  - Fixture kiểm thử tự sinh bằng Windows, không tải mẫu.
+- **Thứ tự**: giai đoạn 1 gồm nền tảng và các chuyển đổi chạy ngay; giai đoạn 2 gồm cửa sổ Cắt đoạn, khung hình, GIF và ghép; FFmpeg LGPL để sau, tùy nhu cầu.
+
 Cập nhật 0.5.0 theo chốt của Đại ca:
 - Nâng .NET 10 LTS, đóng gói self-contained.
 - Bật HEIC.

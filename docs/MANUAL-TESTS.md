@@ -24,6 +24,9 @@
 - [ ] 0.5.0: Khung nền: kéo slider, đổi tỷ lệ, 5 kiểu nền, chọn ảnh nền, bo góc/bóng; Lưu ra đúng như xem trước; batch nhiều ảnh khác tỷ lệ.
 - [ ] 0.5.0: Khung nền trên ảnh lớn (~40–60 MP): thời gian, bộ nhớ, thông báo khi vượt giới hạn.
 - [ ] 0.5.0: tắt Orbit, mở lại: lịch sử tác vụ còn; Xóa lịch sử không xóa file kết quả.
+- [ ] 0.5.0: video điện thoại (dọc, HEVC nếu có extension, có xoay), MOV, MKV/WebM, WMV; MP3/M4A/FLAC/WMA: menu đúng công cụ, thiếu codec báo rõ.
+- [ ] 0.5.0: Cắt đoạn kéo tay nắm, Phát thử nghe đúng đoạn, lưu đúng thời lượng; GIF 20 giây; Khung hình đúng thời điểm; Nén 720p/480p trên video 1080p/4K; Ghép nhiều MP3.
+- [ ] 0.5.0: video dài gần 1 giờ: thời gian xử lý, Hủy giữa chừng không để file .orbit-*, ảnh/PDF vẫn chạy song song.
 - [ ] 0.5.0: kéo PDF scan vào Lấy chữ khi đang dùng app khác: bảng tiến trình hiện góc phải, không cướp focus, Hủy dừng tác vụ, bảng biến mất khi xong; với nhiều màn hình/DPI bảng nằm đúng góc màn hình chính.
 
 - [ ] 0.3.2: cuộn zoom tại con trỏ; 100%/vừa khung; pan bằng Space + kéo/chuột giữa trên crop; kéo ảnh trên resize/nén.

@@ -11,6 +11,10 @@
 - Mã màu sai báo lỗi tại chỗ và giữ màu hợp lệ trước đó.
 - Cửa sổ chính có nút **Xóa lịch sử** cạnh Cài đặt; danh sách tác vụ được giữ qua các lần mở.
 - Bảng tiến trình 340 DIP ở góc phải dưới vùng làm việc, nền đặc theo theme, bo 12, không lấy focus, hiện sau 0,7 giây chạy; ẩn khi cửa sổ chính ở phía trước.
+- Cửa sổ media (Cắt đoạn, Khung hình, GIF ngắn, Nén video) dùng khung editor 900 × 640:
+  - Bên trái: khung hình xem trước (ảnh tĩnh giải mã tại vị trí chọn; file chỉ có âm thanh hiện biểu tượng ♪), thanh thời gian (hai tay nắm ở chế độ đoạn), nút Phát thử và "Đầu/Cuối = tại đây".
+  - Cột phải: ô thời gian m:ss.fff và các lựa chọn fps/độ rộng/độ phân giải/chất lượng có trạng thái chọn, kèm tóm tắt đầu ra.
+- Khi thiếu codec, tâm menu ghi ngắn (ví dụ "Thiếu codec HEVC / Cài HEVC Video Extensions") và chỉ còn ZIP/SHA-256.
 
 0.4.1: Cài đặt và cửa sổ Cập nhật Orbit có dòng “Tác giả: Nguyễn Mạnh Quyết”; không hiển thị địa chỉ nguồn tải cập nhật.
 

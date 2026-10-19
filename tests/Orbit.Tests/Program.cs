@@ -177,6 +177,7 @@ internal static partial class Program
         });
         CheckExtended(source, args.Contains("--office"));
         CheckFrames(source);
+        CheckMedia();
         CheckTextExtraction(args.Contains("--office"));
         CheckLongOcr();
         CheckUpdates();
@@ -205,6 +206,7 @@ internal static partial class Program
                 await CheckFrameEditor(app);
                 await CheckHistory(app);
                 await CheckProgressToast(app);
+                await CheckMediaEditor(app);
                 app.Menu.ShowMenu(new Orbit.App.Interop.Native.Point(700, 420), [Path.Combine(_folder, "text-layer.pdf")]);
                 await app.Menu.Detection;
                 Assert(app.Menu.VisibleTools.Contains(ToolKind.PdfWord), "text PDF offers Word in real WPF menu");

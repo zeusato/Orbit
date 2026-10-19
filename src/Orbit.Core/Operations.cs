@@ -5,11 +5,12 @@ using System.Collections.Generic;
 
 namespace Orbit.Core;
 
-public enum ToolKind { Png, Jpeg, Webp, Bmp, Tiff, Gif, Ico, Resize, Crop, Rotate, Compress, ImagePdf, PdfPng, PdfJpeg, PdfSplit, PdfMerge, OfficePdf, DocxText, Zip, Sha256, More, PdfWord, PdfText, ImageText, Frame }
+public enum ToolKind { Png, Jpeg, Webp, Bmp, Tiff, Gif, Ico, Resize, Crop, Rotate, Compress, ImagePdf, PdfPng, PdfJpeg, PdfSplit, PdfMerge, OfficePdf, DocxText, Zip, Sha256, More, PdfWord, PdfText, ImageText, Frame,
+    VideoMp4, VideoCompress, AudioMp3, AudioM4a, AudioWav, MediaTrim, VideoFrame, VideoGif, AudioMerge }
 public enum JobState { Queued, Running, Completed, Cancelled, Failed }
 public sealed record CropRegion(int X, int Y, int Width, int Height);
 public sealed record ImageRequest(string Source, ToolKind Tool, int Width = 0, int Height = 0,
-    bool KeepAspect = true, int Quality = 85, CropRegion? Crop = null, string[]? Sources = null, FrameOptions? Frame = null);
+    bool KeepAspect = true, int Quality = 85, CropRegion? Crop = null, string[]? Sources = null, FrameOptions? Frame = null, MediaOptions? Media = null);
 
 public static class ToolCatalog
 {
@@ -21,7 +22,9 @@ public static class ToolCatalog
         ToolKind.ImagePdf or ToolKind.OfficePdf => "PDF", ToolKind.PdfSplit => "Tách trang", ToolKind.PdfMerge => "Ghép PDF",
         ToolKind.PdfWord => "Word", ToolKind.PdfText => "Lấy chữ", ToolKind.ImageText => "OCR → TXT",
         ToolKind.DocxText => "Lấy văn bản", ToolKind.Zip => "Tạo ZIP", ToolKind.Sha256 => "SHA-256", ToolKind.More => "Thêm…",
-        ToolKind.Resize => "Resize", ToolKind.Crop => "Crop", ToolKind.Rotate => "Xoay 90°", ToolKind.Frame => "Khung nền", _ => "Nén JPEG"
+        ToolKind.Resize => "Resize", ToolKind.Crop => "Crop", ToolKind.Rotate => "Xoay 90°", ToolKind.Frame => "Khung nền",
+        ToolKind.VideoMp4 => "MP4", ToolKind.VideoCompress => "Nén video", ToolKind.AudioMp3 => "MP3", ToolKind.AudioM4a => "M4A", ToolKind.AudioWav => "WAV",
+        ToolKind.MediaTrim => "Cắt đoạn", ToolKind.VideoFrame => "Khung hình", ToolKind.VideoGif => "GIF ngắn", ToolKind.AudioMerge => "Ghép âm thanh", _ => "Nén JPEG"
     };
     public static string Description(ToolKind tool) => tool switch
     {
@@ -37,13 +40,41 @@ public static class ToolCatalog
         ToolKind.PdfText => "Lấy chữ ra TXT: đọc lớp chữ, OCR tiếng Việt/Anh cho trang scan; không giữ bố cục",
         ToolKind.ImageText => "OCR ảnh tiếng Việt/Anh ra TXT; không giữ bố cục",
         ToolKind.Resize => "Thay đổi kích thước", ToolKind.Crop => "Cắt khung hình",
-        ToolKind.Rotate => "Xoay phải 90 độ", ToolKind.Frame => "Mở rộng khung và thêm nền", _ => "Giảm dung lượng JPEG"
+        ToolKind.Rotate => "Xoay phải 90 độ", ToolKind.Frame => "Mở rộng khung và thêm nền",
+        ToolKind.VideoMp4 => "Chuyển video sang MP4 (H.264/AAC)", ToolKind.VideoCompress => "Giảm dung lượng video theo độ phân giải và chất lượng",
+        ToolKind.AudioMp3 => "Chuyển hoặc tách âm thanh ra MP3", ToolKind.AudioM4a => "Chuyển hoặc tách âm thanh ra M4A (AAC)", ToolKind.AudioWav => "Chuyển âm thanh sang WAV",
+        ToolKind.MediaTrim => "Cắt một đoạn audio/video", ToolKind.VideoFrame => "Lưu một khung hình video ra PNG", ToolKind.VideoGif => "Tạo GIF ngắn từ video (tối đa 20 giây)",
+        ToolKind.AudioMerge => "Ghép các file âm thanh theo thứ tự tên file", _ => "Giảm dung lượng JPEG"
     };
     public static bool SupportsPath(string path) => Path.GetExtension(path).ToLowerInvariant() is
         ".jpg" or ".jpeg" or ".png" or ".bmp" or ".tif" or ".tiff" or ".gif" or ".webp" or ".ico" or ".avif" or ".heic" or ".heif" or ".tga";
     public static bool IsImageTool(ToolKind tool) => tool is ToolKind.Png or ToolKind.Jpeg or ToolKind.Webp or ToolKind.Bmp or ToolKind.Tiff or ToolKind.Gif or ToolKind.Ico or ToolKind.Resize or ToolKind.Crop or ToolKind.Rotate or ToolKind.Compress or ToolKind.Frame;
-    public static IReadOnlyList<ToolKind> ForFiles(IReadOnlyList<FileKind> kinds, Func<FileKind, bool>? officeAvailable = null, bool pdfTextOnly = false)
+    // mediaReady: Windows can decode every media file in the selection (checked by the app).
+    public static IReadOnlyList<ToolKind> ForFiles(IReadOnlyList<FileKind> kinds, Func<FileKind, bool>? officeAvailable = null, bool pdfTextOnly = false, bool mediaReady = true)
     {
+        if (kinds.Count > 0 && kinds.All(FileTypes.IsMedia))
+        {
+            var media = new List<ToolKind>();
+            if (mediaReady)
+            {
+                var single = kinds.Count == 1;
+                if (kinds.All(FileTypes.IsVideo))
+                {
+                    if (!kinds.All(k => k == FileKind.Mp4)) media.Add(ToolKind.VideoMp4);
+                    media.Add(ToolKind.VideoCompress); if (single) media.Add(ToolKind.MediaTrim);
+                    media.Add(ToolKind.AudioM4a); media.Add(ToolKind.AudioMp3);
+                    if (single) { media.Add(ToolKind.VideoFrame); media.Add(ToolKind.VideoGif); }
+                }
+                else if (kinds.All(FileTypes.IsAudio))
+                {
+                    foreach (var (tool, kind) in new[] { (ToolKind.AudioMp3, FileKind.Mp3), (ToolKind.AudioM4a, FileKind.M4a), (ToolKind.AudioWav, FileKind.Wav) })
+                        if (!kinds.Contains(kind)) media.Add(tool);
+                    if (single) media.Add(ToolKind.MediaTrim); else media.Add(ToolKind.AudioMerge);
+                }
+                else { media.Add(ToolKind.AudioM4a); media.Add(ToolKind.AudioMp3); }
+            }
+            media.Add(ToolKind.Zip); media.Add(ToolKind.Sha256); return media;
+        }
         if (kinds.Count == 0) return [];
         var tools = new List<ToolKind>();
         if (kinds.All(FileTypes.IsImage))
@@ -76,7 +107,8 @@ public static class ToolCatalog
         var pages = (tools.Count + 4) / 5;
         return tools.Skip((page % pages) * 5).Take(5).Append(ToolKind.More).ToArray();
     }
-    public static bool SupportsCount(ToolKind tool, int count) => count > 0 && (tool != ToolKind.Crop || count == 1);
+    public static bool SupportsCount(ToolKind tool, int count) => count > 0 && (tool is not (ToolKind.Crop or ToolKind.MediaTrim or ToolKind.VideoFrame or ToolKind.VideoGif) || count == 1) && (tool != ToolKind.AudioMerge || count >= 2);
+    public static bool IsMediaTool(ToolKind tool) => tool is >= ToolKind.VideoMp4 and <= ToolKind.AudioMerge;
     public static (string Stem, string Extension) OutputName(ImageRequest request)
     {
         var stem = Path.GetFileNameWithoutExtension(request.Source);
@@ -90,6 +122,10 @@ public static class ToolCatalog
             ToolKind.PdfWord => (stem, ".docx"), ToolKind.PdfText or ToolKind.ImageText => (stem + "_text", ".txt"),
             ToolKind.Compress => (stem + "_small", ".jpg"),
             ToolKind.Frame => (stem + "_frame", request.Frame?.Jpeg == true ? ".jpg" : ".png"),
+            ToolKind.VideoMp4 => (stem, ".mp4"), ToolKind.VideoCompress => (stem + "_small", ".mp4"),
+            ToolKind.AudioMp3 => (stem, ".mp3"), ToolKind.AudioM4a => (stem, ".m4a"), ToolKind.AudioWav => (stem, ".wav"),
+            ToolKind.MediaTrim => (stem + "_cut", request.Media?.Extension ?? ".mp4"), ToolKind.VideoFrame => (stem + "_frame", ".png"),
+            ToolKind.VideoGif => (stem, ".gif"), ToolKind.AudioMerge => (stem + "_merged", request.Media?.Extension ?? ".m4a"),
             ToolKind.Resize => (stem + "_resized", ".png"),
             ToolKind.Crop => (stem + "_crop", ".png"),
             _ => (stem + "_rotated", ".png")

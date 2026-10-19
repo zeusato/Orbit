@@ -29,6 +29,7 @@ public sealed class RadialWindow : Window
     private bool _armed;
     private bool _ready;
     private string? _detectionError;
+    private string? _notice;
     private bool _moreLatched;
     private readonly DispatcherTimer _moreTimer = new() { Interval = TimeSpan.FromMilliseconds(650) };
     private int _generation, _page;
@@ -134,7 +135,7 @@ public sealed class RadialWindow : Window
         _detectionCancellation?.Cancel(); _detectionCancellation?.Dispose();
         _detectionCancellation = new CancellationTokenSource();
         var token = _detectionCancellation.Token;
-        _files = files.ToArray(); _ready = false; _detectionError = null; _tools = []; _page = 0; RebuildTools();
+        _files = files.ToArray(); _ready = false; _detectionError = null; _notice = null; _tools = []; _page = 0; RebuildTools();
         _file.Text = files.Length == 1 ? Path.GetFileName(files[0]) : $"{files.Length} file";
         _hint.Text = "Đang nhận diện…";
         try
@@ -142,10 +143,10 @@ public sealed class RadialWindow : Window
             var detected = await Task.Run(() =>
             {
                 if (files.Length is < 1 or > 128 || files.Any(Directory.Exists)) throw new NotSupportedException("Chọn file, không chọn thư mục.");
-                return FileToolResolver.Resolve(files, token);
+                return FileToolResolver.ResolveWithNotice(files, token);
             });
             if (generation != _generation) return;
-            _tools = detected; _ready = true; RebuildTools(); Select(-1);
+            _tools = detected.Tools; _notice = detected.Notice; _ready = true; RebuildTools(); Select(-1);
             // Keep the original activation point: detection must not demand a second gesture.
         }
         catch (OperationCanceledException) { }
@@ -167,6 +168,10 @@ public sealed class RadialWindow : Window
             ToolKind.Crop => "M7,2 L7,17 22,17 M2,7 L17,7 17,22",
             ToolKind.Rotate => "M20,8 A9,9 0 1 0 21,15 M20,2 L20,8 14,8",
             ToolKind.Frame => "M2,3 L22,3 22,21 2,21 Z M7,8 L17,8 17,16 7,16 Z",
+            ToolKind.VideoMp4 or ToolKind.VideoCompress or ToolKind.VideoGif => "M2,5 L16,5 16,19 2,19 Z M16,10 L22,6 22,18 16,14 M7,9 L12,12 7,15 Z",
+            ToolKind.AudioMp3 or ToolKind.AudioM4a or ToolKind.AudioWav or ToolKind.AudioMerge => "M9,18 L9,5 20,3 20,16 M9,18 A3,3 0 1 1 9,17.9 M20,16 A3,3 0 1 1 20,15.9",
+            ToolKind.MediaTrim => "M6,6 A3,3 0 1 1 6,5.9 M6,18 A3,3 0 1 1 6,17.9 M8,8 L20,18 M8,16 L20,6",
+            ToolKind.VideoFrame => "M3,7 L8,7 10,4 14,4 16,7 21,7 21,20 3,20 Z M12,10 A3.5,3.5 0 1 1 12,17 A3.5,3.5 0 1 1 12,10",
             _ => "M3,3 L9,9 M9,3 L9,9 3,9 M21,21 L15,15 M15,21 L15,15 21,15"
         };
         var icon = new WpfPath { Data = Geometry.Parse(data), Width = 24, Height = 24, StrokeThickness = 1.7, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Center };
@@ -205,6 +210,7 @@ public sealed class RadialWindow : Window
         var previous = _selected;
         _selected = CanExecute(sector) ? sector : -1;
         _hint.Text = _detectionError ?? (!_ready ? (_files.Length == 0 ? "Di chuyển nhẹ\nđể nhận file" : "Đang nhận diện…\nCó thể thả để chờ") : _selected >= 0 ? (_pageTools[_selected] == ToolKind.More && NativeDragActive ? "Giữ để sang trang" : NativeDragActive ? "Thả để chọn" : "Bấm để chọn") : "Chọn công cụ\nEsc để hủy");
+        if (_ready && _selected < 0 && _notice != null) _hint.Text = _notice;
         if (previous != _selected) RefreshColors();
     }
     public void ShowMenu(Native.Point cursor, string[]? files = null)
@@ -215,7 +221,7 @@ public sealed class RadialWindow : Window
         NativeDragActive = files == null;
         _activationPoint = cursor; _armed = files != null;
         _files = []; _ready = false; _detectionError = null; _hint.ToolTip = null; _moreLatched = false; _tools = []; _page = 0; RebuildTools();
-        _file.Text = _files.Length switch { 0 => "Kéo file vào", 1 => Path.GetFileName(_files[0]), _ => $"{_files.Length} ảnh" };
+        _file.Text = _files.Length switch { 0 => "Kéo file vào", 1 => Path.GetFileName(_files[0]), _ => $"{_files.Length} file" };
         LastDropDiagnostic = NativeDragActive ? "Đã gọi menu, đang chờ OLE DragEnter" : "Chọn file trực tiếp";
         Select(-1); ShowActivated = !NativeDragActive; Native.SetNoActivate(this, NativeDragActive);
         Native.PositionMenu(this, cursor); Show(); Native.PositionMenu(this, cursor);

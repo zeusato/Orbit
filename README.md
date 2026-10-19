@@ -1,10 +1,10 @@
 # Orbit 0.5.0
 
-Đại ca có thể xử lý ảnh, PDF và tài liệu Office tại máy bằng menu tròn. Em đã sửa nền vuông ngoài vòng, thêm nhận dạng nội dung file và WebP. File không được tải lên dịch vụ bên ngoài.
+Đại ca có thể xử lý ảnh, PDF, tài liệu Office, âm thanh và video tại máy bằng menu tròn. File không được tải lên dịch vụ bên ngoài.
 
 ## Chạy ứng dụng
 
-Yêu cầu Windows 11 x64; từ 0.5.0 bản ZIP đã kèm .NET 10 (self-contained), không cần cài .NET riêng. OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.5.0-win-x64.zip` (khoảng 119 MB). Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
+Yêu cầu Windows 11 x64; từ 0.5.0 bản ZIP đã kèm .NET 10 (self-contained), không cần cài .NET riêng. OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.5.0-win-x64.zip` (khoảng 125 MB). Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
 
 ## Cập nhật
 
@@ -44,6 +44,8 @@ Vòng kính chỉ vẽ bên trong hình tròn. Nền mờ là ảnh chụp trong
 | PDF | Xuất tất cả trang thành PNG/JPEG 150 DPI; tách trang thành từng PDF; ghép nhiều PDF theo tên file |
 | DOC/DOCX, XLS/XLSX, PPT/PPTX | Xuất PDF, cần Microsoft Word/Excel/PowerPoint tương ứng đã cài |
 | DOCX | Trích văn bản thân tài liệu thành TXT UTF-8, không cần Word |
+| Video (MP4, MOV, MKV/WebM, AVI, WMV) | MP4 (H.264/AAC), nén video theo độ phân giải/chất lượng, cắt đoạn, tách âm thanh M4A/MP3, khung hình → PNG, GIF ngắn ≤ 20 giây |
+| Âm thanh (MP3, M4A, WAV, WMA, FLAC, AAC…) | MP3, M4A, WAV, cắt đoạn, ghép nhiều file theo tên |
 | File bất kỳ | Tạo ZIP riêng cho từng file; lưu mã SHA-256 |
 
 Chọn từ hai PDF để hiện Ghép PDF. Batch tối đa 128 file và chỉ hiện các công cụ chung; crop chỉ nhận một ảnh. WebP xuất lossless và giữ alpha; JPEG ghép nền trắng; GIF có tối đa 256 màu; ICO thu về tối đa 256 px. AVIF, HEIC/HEIF và TGA là định dạng đầu vào. HEIC giải mã bằng libheif đi kèm, không cần HEIF Extension của Windows; file có nhiều ảnh lấy ảnh chính, HEIF chuỗi/ảnh động bị từ chối. Ảnh động và TIFF nhiều trang chưa được hỗ trợ.
@@ -60,7 +62,9 @@ Menu phân tích từng trang PDF trước khi hiện Word. Có trang scan thì 
 
 OCR chạy hoàn toàn cục bộ bằng mô hình tiếng Việt và Anh, không tự đoán/sửa nội dung bằng AI. Có nhắc đối chiếu dấu, tên và số; trang có độ tin cậy thấp hoặc không nhận được chữ có thông báo rõ trong TXT. Điểm tin cậy không phải phần trăm chính xác. Hiện đã kiểm thử chữ in rõ; chưa nghiệm thu tài liệu thực tế đa dạng, chữ viết tay hoặc scan mờ. Ảnh dọc dài được chia vùng đọc có phần chồng; tiến độ và hủy có hiệu lực giữa các vùng. PDF không còn bị thu cạnh dài về 4.000 px; giới hạn render là 48 megapixel và 30.000 px/cạnh. Vẫn còn lỗi dấu, số và thứ tự đọc cột trên mẫu HPG thực tế; đây là bản sửa mất nội dung, chưa chứng minh OCR đạt độ chính xác mong muốn.
 
-Office → PDF mở tài liệu chỉ đọc, tắt macro trong phiên xử lý rồi khôi phục thiết lập. Tác vụ có thể phải đợi COM trả về trước khi hủy; tài liệu có mật khẩu, Protected View hoặc Office chưa kích hoạt có thể báo lỗi hoặc chờ Office. Chưa có PDF → Excel, phục dựng bảng/hình PDF → Word, xóa/thay nền AI hoặc audio/video.
+Office → PDF mở tài liệu chỉ đọc, tắt macro trong phiên xử lý rồi khôi phục thiết lập. Tác vụ có thể phải đợi COM trả về trước khi hủy; tài liệu có mật khẩu, Protected View hoặc Office chưa kích hoạt có thể báo lỗi hoặc chờ Office. Chưa có PDF → Excel, phục dựng bảng/hình PDF → Word hoặc xóa/thay nền AI.
+
+Âm thanh/video dùng bộ xử lý media có sẵn của Windows, không FFmpeg. Định dạng đọc được tùy codec trên máy. HEVC, VP9/WebM và AV1 cần extension từ Microsoft Store; menu sẽ ghi rõ khi thiếu codec và chỉ còn ZIP/SHA-256. Giới hạn 2 GB và 1 giờ mỗi file. Video luôn được mã hóa lại sang H.264. Cửa sổ Cắt đoạn/GIF/Khung hình/Nén xem trước bằng khung hình tĩnh tại vị trí chọn; **Phát thử** phát âm thanh của đoạn đó. Chưa có phụ đề, chuẩn hóa âm lượng hoặc stream copy.
 
 ## Phát triển và kiểm thử
 
@@ -74,7 +78,7 @@ SDK .NET 10.0.402 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/pack
 .\scripts\run.ps1
 ```
 
-74 kiểm thử mặc định; thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
+88 kiểm thử mặc định (phần chạy media ghi SKIP trên máy không có Media Foundation); thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
 
 `--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt.
 

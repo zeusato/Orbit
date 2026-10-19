@@ -182,8 +182,22 @@ public sealed class OrbitApplication : Application
         if (UpdateInProgress) { _home?.SetStatus("Đang chuẩn bị cập nhật. Hãy thử lại sau."); return; }
         if (files.Length == 0 || files.Length > 128) return;
         if (tool == ToolKind.More) return;
-        if (tool == ToolKind.PdfMerge)
+        if (tool is ToolKind.PdfMerge or ToolKind.AudioMerge)
         { Queue.Add([new ImageRequest(files[0], tool, Sources: files)]); return; }
+        if (tool is ToolKind.VideoCompress or ToolKind.MediaTrim or ToolKind.VideoFrame or ToolKind.VideoGif)
+        {
+            if (_openingEditor) { ShowHome(); _home!.SetStatus("Đang mở trình chỉnh sửa. Hãy thử lại sau."); return; }
+            _openingEditor = true;
+            try
+            {
+                var info = await Task.Run(() => MediaEngine.Probe(files[0]));
+                if (Dispatcher.HasShutdownStarted) return;
+                var media = new MediaEditorWindow(this, tool, files, info); media.Show(); media.Activate();
+            }
+            catch (Exception error) { ShowHome(); _home!.SetStatus("Không mở được file: " + error.Message); }
+            finally { _openingEditor = false; }
+            return;
+        }
         if (tool is not (ToolKind.Resize or ToolKind.Crop or ToolKind.Compress or ToolKind.Frame))
         { Queue.Add(files.Select(path => new ImageRequest(path, tool))); return; }
         if (_openingEditor) { ShowHome(); _home!.SetStatus("Đang mở trình chỉnh sửa. Hãy thử lại sau khi ảnh được tải."); return; }
@@ -258,6 +272,15 @@ public sealed class OrbitApplication : Application
             _ = new ImageEngine().Load(Path.Combine(pages, "page-0001.png"));
             // Exercise the published native OCR libraries and language data too.
             _ = new DocumentEngine().Execute(new ImageRequest(pdf, ToolKind.PdfText), CancellationToken.None);
+            // Media pipeline in the published app: build a 1 s clip with Windows, then compress it and grab a frame.
+            var clip = await global::Windows.Media.Editing.MediaClip.CreateFromImageFileAsync(await global::Windows.Storage.StorageFile.GetFileFromPathAsync(sample), TimeSpan.FromSeconds(1));
+            var composition = new global::Windows.Media.Editing.MediaComposition(); composition.Clips.Add(clip);
+            var clipProfile = global::Windows.Media.MediaProperties.MediaEncodingProfile.CreateMp4(global::Windows.Media.MediaProperties.VideoEncodingQuality.Vga); clipProfile.Audio = null;
+            var clipFile = await (await global::Windows.Storage.StorageFolder.GetFolderFromPathAsync(folder)).CreateFileAsync("sample.mp4", global::Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            await composition.RenderToFileAsync(clipFile, global::Windows.Media.Editing.MediaTrimmingPreference.Precise, clipProfile);
+            var video = Path.Combine(folder, "sample.mp4");
+            _ = await Task.Run(() => MediaEngine.Execute(new ImageRequest(video, ToolKind.VideoCompress, Media: new(Height: 240)), CancellationToken.None));
+            _ = await Task.Run(() => MediaEngine.Execute(new ImageRequest(video, ToolKind.VideoFrame, Media: new(Start: TimeSpan.FromSeconds(.5))), CancellationToken.None));
             var image = new ImageEngine().Load(sample);
             _home!.Show(); SaveWindow(_home, Path.Combine(folder, "home-dark.png"));
             Menu.ShowMenu(new Native.Point(700, 420), [sample]); await Menu.Detection; SaveWindow(Menu, Path.Combine(folder, "menu-dark.png")); Menu.HideMenu();
@@ -269,7 +292,7 @@ public sealed class OrbitApplication : Application
             if (toast.IsVisible) SaveWindow(toast, Path.Combine(folder, "progress-dark.png"));
             Queue.CancelAll(); while (Queue.HasPending) await Task.Delay(50); toast.Close();
             Settings.Theme = "Light"; RefreshTheme(); SaveWindow(_home, Path.Combine(folder, "home-light.png"));
-            File.WriteAllText(Path.Combine(folder, "render-result.txt"), $"Native WPF renders and WebP/PDF/OCR runtime smoke checks completed. DWM accepted: home={_home.BackdropAvailable}, menu={Menu.BackdropAvailable}");
+            File.WriteAllText(Path.Combine(folder, "render-result.txt"), $"Native WPF renders and WebP/PDF/OCR/media runtime smoke checks completed. DWM accepted: home={_home.BackdropAvailable}, menu={Menu.BackdropAvailable}");
             Shutdown(0);
         }
         catch (Exception error) { File.WriteAllText(Path.Combine(folder, "render-error.txt"), error.ToString()); Shutdown(1); }

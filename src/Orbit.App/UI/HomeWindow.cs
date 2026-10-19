@@ -22,7 +22,7 @@ public sealed class HomeWindow : GlassWindow
         _instruction = Ui.Text("", 14, true); _instruction.Margin = new Thickness(0, 9, 0, 20); intro.Children.Add(_instruction); body.Children.Add(intro); UpdateInstruction();
         var dropContent = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var dropTitle = Ui.Text("Thả file vào đây", 20); dropTitle.TextAlignment = TextAlignment.Center; dropContent.Children.Add(dropTitle);
-        var types = Ui.Text("Ảnh · WebP · HEIC · PDF · Word · Excel · PowerPoint", 12, true); types.TextAlignment = TextAlignment.Center; types.Margin = new Thickness(0, 6, 0, 12); dropContent.Children.Add(types);
+        var types = Ui.Text("Ảnh · HEIC · PDF · Office · Video · Âm thanh", 12, true); types.TextAlignment = TextAlignment.Center; types.Margin = new Thickness(0, 6, 0, 12); dropContent.Children.Add(types);
         var pick = Ui.Button("Chọn file…", PickFiles, true); pick.HorizontalAlignment = HorizontalAlignment.Center; dropContent.Children.Add(pick);
         var dropZone = Ui.Panel(dropContent, 20); dropZone.AllowDrop = true;
         void ResetDrop()
@@ -74,7 +74,7 @@ public sealed class HomeWindow : GlassWindow
     }
     private void PickFiles()
     {
-        var dialog = new OpenFileDialog { Title = "Chọn file để xử lý", Multiselect = true, Filter = "File được hỗ trợ|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.heic;*.heif;*.tga;*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx|Tất cả file (ZIP / SHA-256)|*.*" };
+        var dialog = new OpenFileDialog { Title = "Chọn file để xử lý", Multiselect = true, Filter = "File được hỗ trợ|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.heic;*.heif;*.tga;*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx;*.mp4;*.m4v;*.mov;*.mkv;*.webm;*.avi;*.wmv;*.mp3;*.m4a;*.aac;*.wav;*.wma;*.flac;*.ogg|Tất cả file (ZIP / SHA-256)|*.*" };
         if (dialog.ShowDialog(this) == true)
         {
             var files = dialog.FileNames;

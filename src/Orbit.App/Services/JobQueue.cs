@@ -39,7 +39,7 @@ public sealed class ImageJob(ImageRequest request) : INotifyPropertyChanged
 
 public sealed class JobQueue : IDisposable
 {
-    private readonly BlockingCollection<ImageJob> _pending = new();
+    private readonly BlockingCollection<ImageJob> _pending = new(), _media = new();
     private readonly Dispatcher _ui;
     private readonly Thread _worker;
     private readonly ImageEngine _engine = new();
@@ -66,8 +66,11 @@ public sealed class JobQueue : IDisposable
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
         }
         Finished += job => { job.FinishedUtc = DateTime.UtcNow; SaveHistory(); };
-        _worker = new Thread(Work) { IsBackground = true, Name = "Orbit image worker" };
+        _worker = new Thread(() => Work(_pending)) { IsBackground = true, Name = "Orbit image worker" };
         _worker.SetApartmentState(ApartmentState.STA); _worker.Start();
+        // Long audio/video jobs run on their own worker so image and PDF jobs never wait behind them.
+        var media = new Thread(() => Work(_media)) { IsBackground = true, Name = "Orbit media worker" };
+        media.SetApartmentState(ApartmentState.MTA); media.Start();
     }
 
     public void Add(IEnumerable<ImageRequest> requests)
@@ -75,7 +78,7 @@ public sealed class JobQueue : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         foreach (var request in requests)
         {
-            var job = new ImageJob(request); Jobs.Insert(0, job); _pending.Add(job);
+            var job = new ImageJob(request); Jobs.Insert(0, job); (ToolCatalog.IsMediaTool(request.Tool) ? _media : _pending).Add(job);
         }
         // Keep the UI bounded while retaining every pending job.
         for (int i = Jobs.Count - 1; i >= 200; i--) if (!Jobs[i].CanCancel) Jobs.RemoveAt(i);
@@ -86,9 +89,9 @@ public sealed class JobQueue : IDisposable
         if (!_ui.HasShutdownStarted) _ui.BeginInvoke(action);
     }
 
-    private void Work()
+    private void Work(BlockingCollection<ImageJob> pending)
     {
-        foreach (var job in _pending.GetConsumingEnumerable())
+        foreach (var job in pending.GetConsumingEnumerable())
         {
             try
             {
@@ -96,6 +99,7 @@ public sealed class JobQueue : IDisposable
                 Post(() => job.State = JobState.Running);
                 var output = ToolCatalog.IsImageTool(job.Request.Tool)
                     ? _engine.Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p))
+                    : ToolCatalog.IsMediaTool(job.Request.Tool) ? MediaEngine.Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p))
                     : new DocumentEngine().Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p));
                 Post(() => { job.Output = output; job.State = JobState.Completed; Finished?.Invoke(job); });
             }
@@ -135,7 +139,7 @@ public sealed class JobQueue : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; CancelAll(); _pending.CompleteAdding();
+        _disposed = true; CancelAll(); _pending.CompleteAdding(); _media.CompleteAdding();
         // Worker exits after any in-progress native encoder reaches its cancellation boundary.
     }
 }

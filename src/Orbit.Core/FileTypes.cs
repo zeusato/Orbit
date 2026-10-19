@@ -6,12 +6,16 @@ using System.IO.Compression;
 
 namespace Orbit.Core;
 
-public enum FileKind { Unknown, Jpeg, Png, Webp, Bmp, Tiff, Gif, Ico, Avif, Heic, Tga, Pdf, Docx, Word, Excel, PowerPoint }
+// Mp4 = MPEG-4 video other than QuickTime; Video = MOV, MKV/WebM, AVI, WMV. Audio = WMA, FLAC, Ogg, AAC and other decodable audio.
+public enum FileKind { Unknown, Jpeg, Png, Webp, Bmp, Tiff, Gif, Ico, Avif, Heic, Tga, Pdf, Docx, Word, Excel, PowerPoint, Mp4, Video, Mp3, M4a, Wav, Audio }
 
 public static class FileTypes
 {
     public static bool IsImage(FileKind kind) => kind is >= FileKind.Jpeg and <= FileKind.Tga;
     public static bool IsOffice(FileKind kind) => kind is >= FileKind.Docx and <= FileKind.PowerPoint;
+    public static bool IsVideo(FileKind kind) => kind is FileKind.Mp4 or FileKind.Video;
+    public static bool IsAudio(FileKind kind) => kind is FileKind.Mp3 or FileKind.M4a or FileKind.Wav or FileKind.Audio;
+    public static bool IsMedia(FileKind kind) => IsVideo(kind) || IsAudio(kind);
     public static FileKind Detect(string path)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -36,7 +40,25 @@ public static class FileTypes
             if (Hevc(brands[0])) return FileKind.Heic;
             if (brands.Any(Av1)) return FileKind.Avif;
             if (brands.Any(x => Hevc(x) || x is "mif1" or "msf1")) return FileKind.Heic;
+            if (brands.Any(x => x is "M4A " or "M4B " or "M4P " or "F4A ")) return FileKind.M4a;
+            if (brands[0] is "qt  ") return FileKind.Video;
+            // Windows and many tools write audio-only MP4 with generic brands; the extension then decides.
+            if (Path.GetExtension(path).ToLowerInvariant() is ".m4a" or ".m4b" or ".aac") return FileKind.M4a;
+            if (brands.Any(x => x is "isom" or "iso2" or "iso4" or "iso5" or "iso6" or "mp41" or "mp42" or "avc1" or "M4V " or "M4VH" or "3gp4" or "3gp5" or "3gp6" or "3g2a" or "dash" or "MSNV" or "mmp4" or "XAVC" or "f4v ")) return FileKind.Mp4;
         }
+        if (b.Length >= 12 && b[..4].SequenceEqual("RIFF"u8))
+        {
+            if (b.Slice(8, 4).SequenceEqual("WAVE"u8)) return FileKind.Wav;
+            if (b.Slice(8, 4).SequenceEqual("AVI "u8)) return FileKind.Video;
+        }
+        if (b.StartsWith(new byte[] {0x1a,0x45,0xdf,0xa3})) return FileKind.Video; // Matroska / WebM (EBML)
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        if (b.StartsWith(new byte[] {0x30,0x26,0xb2,0x75,0x8e,0x66,0xcf,0x11})) return extension == ".wma" ? FileKind.Audio : FileKind.Video; // ASF
+        if (b.StartsWith("fLaC"u8) || b.StartsWith("OggS"u8)) return FileKind.Audio;
+        if (b.StartsWith("ID3"u8)) return extension is ".aac" or ".m4a" ? FileKind.Audio : FileKind.Mp3;
+        // Bare MPEG audio frames have only an 11-bit sync word; trust it only with a matching extension.
+        if (b.Length >= 2 && b[0] == 0xff && (b[1] & 0xe0) == 0xe0 && extension is ".mp3" or ".aac")
+            return (b[1] & 0x06) == 0 ? FileKind.Audio : FileKind.Mp3;
         if (b.StartsWith("%PDF-"u8)) return FileKind.Pdf;
         if (b.StartsWith("PK\x03\x04"u8))
         {

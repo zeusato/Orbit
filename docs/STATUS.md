@@ -3,15 +3,16 @@
 ## Bản hiện tại: 0.5.0
 
 Đã triển khai:
-- Chuyển sang .NET 10 LTS (SDK 10.0.402) và đóng gói self-contained, không cần cài .NET. ZIP 119 MB.
+- Chuyển sang .NET 10 LTS (SDK 10.0.402) và đóng gói self-contained, không cần cài .NET. ZIP 125 MB.
 - Mở được HEIC/HEIF bằng libheif của Magick.NET.
 - Công cụ **Khung nền**: viền, tỷ lệ, nền màu/chuyển màu/họa tiết/ảnh/ảnh gốc mờ, bo góc, đổ bóng.
 - Tự phục hồi khi cập nhật bị ngắt giữa chừng.
 - Tự dọn backup và bản tải cũ.
 - Thanh tiến trình ở góc phải cho tác vụ chạy lâu, có Hủy/Mở Orbit, không lấy focus.
+- Âm thanh/video bằng bộ xử lý media của Windows: MP4, nén video, cắt đoạn, tách/chuyển MP3/M4A/WAV, khung hình PNG, GIF ngắn, ghép âm thanh. Kiểm tra codec trước khi hiện công cụ; giới hạn 2 GB/1 giờ; chạy trên hàng đợi riêng.
 - Lưu lịch sử tác vụ qua các lần mở app.
 
-Build 0 warning/error; 74/74 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
+Build 0 warning/error; 88/88 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
 
 Chưa kiểm chứng trên máy này:
 - Hai kịch bản helper có ký: cần private key, chạy trên CI khi push.
@@ -19,6 +20,7 @@ Chưa kiểm chứng trên máy này:
 - Ảnh HEIC từ iPhone thật.
 - Khung nền với canvas gần 60 MP.
 - Thao tác chuột trên editor Khung nền.
+- Video thật quay bằng điện thoại (xoay theo metadata, HEVC), file media dài gần 1 giờ, phát thử trên máy có nhiều thiết bị âm thanh.
 
 Chi tiết ở [RELEASE-0.5.0.md](RELEASE-0.5.0.md).
 

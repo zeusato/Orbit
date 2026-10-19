@@ -1,9 +1,9 @@
-# Orbit 0.5.0 — .NET 10, HEIC và Khung nền
+# Orbit 0.5.0 — .NET 10, HEIC, Khung nền, âm thanh và video
 
 ## Nền tảng
 
 - Chuyển toàn bộ sang .NET 10 LTS (SDK 10.0.402, runtime 10.0.13) vì .NET 8 hết hỗ trợ ngày 10/11/2026.
-- ZIP giờ là **self-contained**: không cần cài .NET Desktop Runtime. OCR vẫn cần Microsoft Visual C++ Redistributable x64. ZIP khoảng 119 MB, giải nén khoảng 242 MB (0.4.1: khoảng 52 MB).
+- ZIP giờ là **self-contained**: không cần cài .NET Desktop Runtime. OCR vẫn cần Microsoft Visual C++ Redistributable x64. ZIP khoảng 125 MB, giải nén khoảng 267 MB (0.4.1: khoảng 52 MB).
 - Bản 0.4.x tự cập nhật lên được: helper cũ tải ZIP mới, kiểm tra chữ ký và khởi động bản self-contained. Gói vẫn có đủ các file mà helper 0.4.x yêu cầu.
 - Helper cập nhật giờ chép cả runtime mà nó cần (theo `Orbit.Updater.deps.json`) ra thư mục chạy riêng. Script đóng gói kiểm tra helper bản sao khởi động được khi không có .NET dùng chung.
 
@@ -28,6 +28,31 @@ Công cụ mới trên menu ảnh, sau Nén JPEG. Orbit mở rộng khung ra xun
 - Bo góc 0–20% cạnh ngắn, đổ bóng mềm, xuất PNG hoặc JPEG 92%.
 - Có xem trước trực tiếp. Batch dùng cùng thông số, khung tính theo tỷ lệ của từng ảnh. Canvas vượt 60 MP hoặc 32768 px/cạnh bị từ chối kèm hướng dẫn.
 
+## Âm thanh và video
+
+Dùng bộ xử lý media có sẵn của Windows (Media Foundation qua Windows.Media), không FFmpeg. Định dạng đọc được phụ thuộc codec trên máy: MP4/MOV (H.264), MP3, AAC/M4A, WAV, WMV/WMA, FLAC thường có sẵn. HEVC, VP9/WebM, AV1 cần extension từ Microsoft Store; Windows bản N cần Media Feature Pack. Trước khi hiện công cụ, Orbit dựng thử chuỗi giải mã. Nếu thiếu codec, tâm menu ghi rõ (ví dụ "Thiếu codec HEVC") và chỉ còn ZIP/SHA-256.
+
+| Nguồn | Công cụ |
+| --- | --- |
+| Video (MP4, MOV, MKV/WebM, AVI, WMV) | MP4 (H.264/AAC, giữ độ phân giải), Nén video (Gốc/1080p/720p/480p × Cao/Vừa/Thấp), Cắt đoạn, tách âm thanh M4A/MP3, Khung hình → PNG, GIF ngắn |
+| Âm thanh (MP3, M4A, WAV, WMA, FLAC, AAC, Ogg nếu Windows đọc được) | MP3 (192 kbps), M4A (AAC), WAV, Cắt đoạn, Ghép âm thanh (từ 2 file, theo tên) |
+
+- **Cửa sổ chung** cho Cắt đoạn / Khung hình / GIF / Nén:
+  - Khung hình xem trước là ảnh tĩnh giải mã đúng thời điểm, không phải phát video liên tục.
+  - Thanh thời gian có hai tay nắm; ô nhập `m:ss.fff` hoặc số giây.
+  - Nút "Đầu/Cuối = tại đây"; phím [ ] đặt đầu/cuối, mũi tên nhích 0,1 giây (Shift: 1 giây), Space phát/dừng.
+  - **Phát thử** phát âm thanh của đoạn đã chọn, kèm cập nhật khung hình.
+- **Cắt đoạn**: video xuất MP4 mã hóa lại, giữ độ phân giải; audio giữ MP3/M4A/WAV, định dạng khác ra M4A.
+- **GIF ngắn**: tối đa 20 giây; 10/12/15 fps; rộng 320/480/640 px (không vượt video gốc); 256 màu.
+- **Nén video**: áp mức độ phân giải lên cạnh ngắn, không phóng to. Dung lượng hiển thị chỉ là ước tính theo bitrate mục tiêu.
+- **Giới hạn**: 2 GB và 1 giờ mỗi file, tổng ghép tối đa 1 giờ. Orbit kiểm tra ổ đĩa còn trống trước khi chạy, ghi file tạm rồi đổi tên; hủy thì xóa file tạm.
+- **Hàng đợi media riêng**: video dài không chặn ảnh/PDF; tiến độ hiện trong danh sách và trên bảng góc phải.
+- Gói tăng khoảng 6 MB (ZIP 125 MB) do thư viện cầu nối WinRT; app target Windows 10 2004 (19041) trở lên.
+- **Chưa làm**:
+  - Xoay theo metadata của video quay điện thoại: chưa kiểm chứng.
+  - Phụ đề, chuẩn hóa âm lượng, giữ nguyên luồng không mã hóa lại (stream copy).
+  - WebM/MKV khi máy thiếu codec.
+
 ## Thanh tiến trình góc phải
 
 - Tác vụ chạy quá 0,7 giây (OCR, PDF nhiều trang, Office, batch) hiện một bảng nhỏ ở góc phải dưới, đúng vị trí thông báo hoàn tất. Bảng gồm: tên file, thanh tiến độ, "Công cụ · %" và số thứ tự trong lượt (ví dụ 2/8).
@@ -44,10 +69,10 @@ Công cụ mới trên menu ảnh, sau Nén JPEG. Orbit mở rộng khung ra xun
 
 ## Kiểm chứng
 
-- Build 0 cảnh báo/0 lỗi; 74/74 kiểm thử mặc định (gồm thanh tiến trình: hiện ở góc phải với tác vụ OCR thật, không lấy focus, tự ẩn khi xong và khi cửa sổ chính ở phía trước), có bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
+- Build 0 cảnh báo/0 lỗi; 88/88 kiểm thử mặc định, có 14 bài audio/video trên fixture tự sinh bằng Windows (video đỏ→xanh có tiếng, WAV tone). Các bài này đo thời lượng, kích thước, màu khung hình tại thời điểm chọn, đoạn cắt, số khung GIF, thứ tự ghép, hủy không để file dở, và cửa sổ Cắt đoạn thật. Máy không có Media Foundation (Windows Server trên CI) sẽ ghi SKIP cho phần chạy media. Thanh tiến trình được kiểm tra với tác vụ OCR thật: hiện ở góc phải, không lấy focus, tự ẩn khi xong và khi cửa sổ chính ở phía trước. Có thêm bài giải mã HEIC thật khi đặt `ORBIT_HEIC_SAMPLE`. File mẫu là `example.heic` của libheif, chỉ dùng để thử trên máy, không đưa vào repo.
 - Khung nền: kiểm tra từng pixel ảnh gốc được giữ 1:1, màu viền, chuyển màu, 4 họa tiết, nền ảnh có và không mờ, ảnh gốc mờ, bo góc, đổ bóng, JPEG. Editor WPF thật được kiểm tra luồng đổi tỷ lệ, chọn mẫu chuyển màu, từ chối mã màu sai và lưu ra ảnh đúng kích thước.
 - Phục hồi bằng tiến trình thật (`scripts/test-updater.ps1 -RecoverOnly`): install bị trộn phiên bản được trả về 0.0.1, file mới thêm bị gỡ, file người dùng giữ nguyên.
-- Đã chạy `dist/Orbit/Orbit.exe --render-previews` với DOTNET_ROOT trỏ sai: render giao diện, WebP, PDF và OCR đều đạt.
+- Đã chạy `dist/Orbit/Orbit.exe --render-previews` với DOTNET_ROOT trỏ sai: render giao diện, WebP, PDF, OCR và media (dựng video, nén 240p, lưu khung hình) đều đạt.
 - Chưa kiểm chứng trên máy này:
   - Hai kịch bản helper có ký (nâng phiên bản và rollback): cần private key, sẽ chạy trên CI khi push.
   - Cập nhật thật từ 0.4.1 cài sẵn lên 0.5.0.

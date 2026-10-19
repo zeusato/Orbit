@@ -40,10 +40,31 @@ public static class PdfTextReader
 
 public static class FileToolResolver
 {
-    public static IReadOnlyList<ToolKind> Resolve(string[] files, CancellationToken token = default)
+    public static IReadOnlyList<ToolKind> Resolve(string[] files, CancellationToken token = default) => ResolveWithNotice(files, token).Tools;
+    // Notice: a short reason shown in the menu hub when media tools are withheld (missing codec, limits).
+    public static (IReadOnlyList<ToolKind> Tools, string? Notice) ResolveWithNotice(string[] files, CancellationToken token = default)
     {
         var kinds = files.Select(FileTypes.Detect).ToArray();
         var textOnly = kinds.All(k => k == FileKind.Pdf) && files.All(f => PdfTextReader.Analyze(f, token).CanConvertToWord);
-        return ToolCatalog.ForFiles(kinds, OfficeConverter.Available, textOnly);
+        string? notice = null;
+        if (kinds.Length > 0 && kinds.All(FileTypes.IsMedia))
+        {
+            for (int i = 0; i < files.Length && notice == null; i++)
+            {
+                token.ThrowIfCancellationRequested();
+                if (new FileInfo(files[i]).Length > MediaLimits.MaxBytes) { notice = "File quá 2 GB"; break; }
+                try
+                {
+                    var info = MediaEngine.Probe(files[i], token);
+                    if (info.Duration > MediaLimits.MaxDuration) { notice = "File dài quá 1 giờ"; break; }
+                    // An MP4/MKV without a picture track is audio for every tool.
+                    if (FileTypes.IsVideo(kinds[i]) && !info.HasVideo) kinds[i] = FileKind.Audio;
+                    // Building the decode chain is the reliable codec check; bound it for large batches.
+                    if (i < 8) notice = MediaEngine.MissingCodec(files[i], info, token);
+                }
+                catch (NotSupportedException) { notice = "Windows chưa đọc được\nđịnh dạng này"; }
+            }
+        }
+        return (ToolCatalog.ForFiles(kinds, OfficeConverter.Available, textOnly, notice == null), notice);
     }
 }

@@ -9,7 +9,7 @@ Nguồn cố định: `https://github.com/zeusato/Orbit`. Client không cần Gi
 - Chỉ tải qua HTTPS từ GitHub/CDN GitHub; kiểm tra RSA-PSS/SHA-256 bằng public key nhúng, rồi kiểm tra SHA-256 và kích thước ZIP. Kiểm tra lại trong helper trước áp dụng; chặn downgrade và phiên bản assembly không khớp manifest.
 - Tự áp dụng khi ở khay, mọi cửa sổ đã đóng, không có job/editor/menu/chuột kéo. Cập nhật ngay vẫn phải chờ công cụ đang xử lý và editor đóng. Để sau hoãn 4 giờ.
 - Helper chạy từ bản sao trong `%LOCALAPPDATA%/Orbit/updates/<id>/runner`, xác nhận đúng PID/thời điểm khởi động/đường dẫn tiến trình Orbit rồi mới yêu cầu app thoát. Chỉ thay file sau khi tiến trình cũ đã thoát. Từ 0.5.0, bản sao gồm helper và toàn bộ runtime mà `Orbit.Updater.deps.json` liệt kê (khoảng 190 file, 78 MB), nên helper chạy được khi máy không có .NET.
-- ZIP có gốc `Orbit/`; từ chối traversal, ADS, tên thiết bị Windows, symlink, file trùng, settings.json và đường dẫn dành riêng. Giới hạn 256 MiB nén, 768 MiB giải nén, 2.000 entries. Bản 0.5.0 nằm trong giới hạn này: khoảng 119 MB nén, 242 MB giải nén, 312 file.
+- ZIP có gốc `Orbit/`; từ chối traversal, ADS, tên thiết bị Windows, symlink, file trùng, settings.json và đường dẫn dành riêng. Giới hạn 256 MiB nén, 768 MiB giải nén, 2.000 entries. Bản 0.5.0 nằm trong giới hạn này: khoảng 125 MB nén, 267 MB giải nén, 315 file.
 - Sao lưu mọi file sẽ thay vào `.orbit-backup/<id>/files`, ghi journal, thay từng file bằng rename. Bản mới phải xác nhận khởi động qua event ngẫu nhiên trong 45 giây; thất bại thì dừng tiến trình mới, khôi phục file cũ, xóa file mới đã thêm và mở bản cũ.
 - Không thay cấu hình trong LocalAppData, không đổi đường dẫn Orbit.exe nên startup giữ nguyên. Thư mục portable phải ghi được; không tự xin administrator.
 
@@ -43,4 +43,4 @@ Chữ ký riêng chỉ xác thực bản cập nhật cho Orbit, không làm Win
   - Giữ backup hoàn tất mới nhất, mọi journal dở, bản tải đang chờ và các thư mục tải mới tạo dưới 10 phút.
   - Xóa các backup cũ đã hoàn tất hoặc đã rollback, và các thư mục tải cũ.
   - Chỉ xóa thư mục tên GUID của Orbit, không đi theo junction.
-- Không tải delta; mỗi bản lấy trọn ZIP (khoảng 119 MB từ 0.5.0). Không thêm Python, PyTorch hoặc model OCR.
+- Không tải delta; mỗi bản lấy trọn ZIP (khoảng 125 MB từ 0.5.0). Không thêm Python, PyTorch hoặc model OCR.

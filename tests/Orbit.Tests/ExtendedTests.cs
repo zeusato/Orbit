@@ -69,7 +69,7 @@ internal static partial class Program
             Assert(FileTypes.Detect(Ftyp("phone.heic", "heic", "mif1", "heic")) == FileKind.Heic, "HEIC major brand");
             Assert(FileTypes.Detect(Ftyp("generic.heif", "mif1", "mif1", "heic", "hevc")) == FileKind.Heic, "generic HEIF with HEVC");
             Assert(FileTypes.Detect(Ftyp("generic-av1.heif", "mif1", "mif1", "avif")) == FileKind.Avif, "generic HEIF with AV1");
-            Assert(FileTypes.Detect(Ftyp("clip.mp4", "isom", "isom", "mp42")) == FileKind.Unknown, "video is not an image");
+            Assert(FileTypes.Detect(Ftyp("clip.mp4", "isom", "isom", "mp42")) == FileKind.Mp4 && !FileTypes.IsImage(FileKind.Mp4), "video is not an image");
             var tools = ToolCatalog.ForFiles([FileKind.Heic]);
             Assert(FileTypes.IsImage(FileKind.Heic) && tools.Contains(ToolKind.Jpeg) && tools.Contains(ToolKind.Png) && tools.Contains(ToolKind.Crop), "HEIC gets image tools");
             Assert(ToolCatalog.SupportsPath("IMG_0001.HEIC"), "picker accepts .heic");
