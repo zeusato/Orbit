@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.IO.Compression;
 
@@ -8,7 +10,7 @@ public enum FileKind { Unknown, Jpeg, Png, Webp, Bmp, Tiff, Gif, Ico, Avif, Heic
 
 public static class FileTypes
 {
-    public static bool IsImage(FileKind kind) => kind is >= FileKind.Jpeg and <= FileKind.Tga && kind != FileKind.Heic;
+    public static bool IsImage(FileKind kind) => kind is >= FileKind.Jpeg and <= FileKind.Tga;
     public static bool IsOffice(FileKind kind) => kind is >= FileKind.Docx and <= FileKind.PowerPoint;
     public static FileKind Detect(string path)
     {
@@ -23,8 +25,17 @@ public static class FileTypes
         if (b.Length >= 12 && b[..4].SequenceEqual("RIFF"u8) && b.Slice(8,4).SequenceEqual("WEBP"u8)) return FileKind.Webp;
         if (b.Length >= 16 && b.Slice(4,4).SequenceEqual("ftyp"u8))
         {
-            if (b.Slice(8,4).SequenceEqual("avif"u8) || b.Slice(8,4).SequenceEqual("avis"u8)) return FileKind.Avif;
-            if (b.Slice(8,4).SequenceEqual("heic"u8) || b.Slice(8,4).SequenceEqual("heix"u8) || b.Slice(8,4).SequenceEqual("mif1"u8)) return FileKind.Heic;
+            // Major brand first, then compatible brands: generic HEIF (mif1/msf1) may carry AV1 or HEVC.
+            var boxSize = (int)Math.Min(b.Length, System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(b));
+            var brands = new List<string>();
+            for (int i = 8; i + 4 <= boxSize; i += i == 8 ? 8 : 4) brands.Add(System.Text.Encoding.ASCII.GetString(b.Slice(i, 4)));
+            static bool Av1(string brand) => brand is "avif" or "avis";
+            static bool Hevc(string brand) => brand is "heic" or "heix" or "heim" or "heis" or "hevc" or "hevx";
+            if (brands.Count == 0) return FileKind.Unknown;
+            if (Av1(brands[0])) return FileKind.Avif;
+            if (Hevc(brands[0])) return FileKind.Heic;
+            if (brands.Any(Av1)) return FileKind.Avif;
+            if (brands.Any(x => Hevc(x) || x is "mif1" or "msf1")) return FileKind.Heic;
         }
         if (b.StartsWith("%PDF-"u8)) return FileKind.Pdf;
         if (b.StartsWith("PK\x03\x04"u8))

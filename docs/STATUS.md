@@ -1,6 +1,27 @@
 # Tiến độ Orbit
 
-## Bản hiện tại: 0.4.1
+## Bản hiện tại: 0.5.0
+
+Đã triển khai:
+- Chuyển sang .NET 10 LTS (SDK 10.0.402) và đóng gói self-contained, không cần cài .NET. ZIP 119 MB.
+- Mở được HEIC/HEIF bằng libheif của Magick.NET.
+- Công cụ **Khung nền**: viền, tỷ lệ, nền màu/chuyển màu/họa tiết/ảnh/ảnh gốc mờ, bo góc, đổ bóng.
+- Tự phục hồi khi cập nhật bị ngắt giữa chừng.
+- Tự dọn backup và bản tải cũ.
+- Lưu lịch sử tác vụ qua các lần mở app.
+
+Build 0 warning/error; 72/72 kiểm thử tại `artifacts/tests/` (có giải mã HEIC thật với `ORBIT_HEIC_SAMPLE`). Kịch bản phục hồi bằng tiến trình thật đạt (`test-updater.ps1 -RecoverOnly`). Bản đóng gói chạy `--render-previews` đạt khi DOTNET_ROOT trỏ sai.
+
+Chưa kiểm chứng trên máy này:
+- Hai kịch bản helper có ký: cần private key, chạy trên CI khi push.
+- Cập nhật thật từ 0.4.1 lên 0.5.0.
+- Ảnh HEIC từ iPhone thật.
+- Khung nền với canvas gần 60 MP.
+- Thao tác chuột trên editor Khung nền.
+
+Chi tiết ở [RELEASE-0.5.0.md](RELEASE-0.5.0.md).
+
+## Bản 0.4.1
 
 Cài đặt và cửa sổ Cập nhật Orbit hiển thị “Tác giả: Nguyễn Mạnh Quyết”, không còn địa chỉ nguồn tải. Build 0 warning/error; 57/57 kiểm thử đạt tại `artifacts/tests/20261019-181427-478`. Phát hành qua workflow tự động khi push main.
 

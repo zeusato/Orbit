@@ -45,11 +45,11 @@ public sealed class EditorWindow : GlassWindow
         AutomationProperties.SetName((Button)toolbar.Children[0], "Thu nhỏ ảnh"); AutomationProperties.SetName((Button)toolbar.Children[1], "Phóng to ảnh");
         preview.Children.Add(toolbar);
         if (tool == ToolKind.Crop) { _crop = _viewer; BuildCrop(); }
-        else if (tool == ToolKind.Resize) BuildResize(); else BuildCompress();
+        else if (tool == ToolKind.Resize) BuildResize(); else if (tool == ToolKind.Frame) BuildFrame(); else BuildCompress();
         var caption = Ui.Text($"{Path.GetFileName(files[0])}\nẢnh gốc · {image.PixelWidth} × {image.PixelHeight} px" + (files.Length > 1 ? $" · {files.Length} file" : ""), 12, true);
         caption.TextWrapping = TextWrapping.NoWrap; caption.TextTrimming = TextTrimming.CharacterEllipsis; caption.ToolTip = files[0];
         var captionPanel = new StackPanel { Margin = new Thickness(2, 10, 2, 0) }; captionPanel.Children.Add(caption);
-        captionPanel.Children.Add(Ui.Text(tool == ToolKind.Crop ? "Cuộn: zoom · Space + kéo / chuột giữa: di chuyển ảnh" : "Cuộn: zoom · Kéo: di chuyển ảnh", 12, true));
+        captionPanel.Children.Add(Ui.Text(tool == ToolKind.Crop ? "Cuộn: zoom · Space + kéo / chuột giữa: di chuyển ảnh" : tool == ToolKind.Frame ? "Xem trước thu nhỏ · Cuộn: zoom · Kéo: di chuyển" : "Cuộn: zoom · Kéo: di chuyển ảnh", 12, true));
         Grid.SetRow(captionPanel, 2); preview.Children.Add(captionPanel);
         body.Children.Add(preview);
         var side = Ui.Panel(new ScrollViewer { Content = _controls, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, 0); Grid.SetColumn(side, 1); body.Children.Add(side); SetBody(body);
@@ -59,7 +59,7 @@ public sealed class EditorWindow : GlassWindow
         var buttons = Ui.Row(Ui.Button("Hủy", Close), save); DockPanel.SetDock(buttons, Dock.Right); foot.Children.Add(buttons);
         foot.Children.Add(Ui.Text("Lưu cạnh file nguồn\nGiữ bản gốc · Tự thêm số khi trùng tên", 12, true)); SetFooter(foot);
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Enter) { Save(); e.Handled = true; } };
-        Closed += (_, _) => { _closed = true; _previewRevision++; _previewTimer.Stop(); };
+        Closed += (_, _) => { _closed = true; _previewRevision++; _previewTimer.Stop(); _frameTimer.Stop(); };
     }
     private void Zoom(double factor) => _viewer.ZoomAt(factor, new Point(_viewer.ActualWidth / 2, _viewer.ActualHeight / 2));
     private void Heading(string text)
@@ -150,6 +150,143 @@ public sealed class EditorWindow : GlassWindow
         catch (Exception error) { if (!_closed && revision == _previewRevision) _summary.Text = "Chưa xem trước được: " + error.Message; }
         finally { _previewBusy = false; if (!_closed && revision != _previewRevision) { _previewTimer.Stop(); _previewTimer.Start(); } }
     }
+    private static readonly string[] Palette = ["#FFFFFF", "#F4EFE6", "#1F2328", "#167D72", "#F2C4CE", "#E9C46A", "#8EC5FC", "#B8A9F5"];
+    private static readonly (string Name, string From, string To)[] Gradients = [("Bình minh", "#FBC2EB", "#A6C1EE"), ("Bạc hà", "#D4FC79", "#96E6A1"), ("Hoàng hôn", "#FF9A8B", "#FAD0C4"), ("Đêm", "#141E30", "#243B55")];
+    private FrameOptions _frame = new();
+    private BitmapSource? _frameThumb, _pictureThumb;
+    private readonly StackPanel _backgroundPanel = new();
+    private readonly System.Windows.Threading.DispatcherTimer _frameTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly List<(Button Button, Func<bool> Selected)> _frameChoices = [];
+    public FrameOptions FrameSettings => _frame;
+    private void SetFrame(FrameOptions options) { _frame = options; RefreshChoices(); _frameTimer.Stop(); _frameTimer.Start(); }
+    private Button Choice(string text, Func<bool> selected, Action apply, WrapPanel panel)
+    {
+        var button = Ui.Button(text, apply); button.Padding = new Thickness(10, 7, 10, 7); button.Margin = new Thickness(0, 0, 5, 6);
+        panel.Children.Add(button); _frameChoices.Add((button, selected)); return button;
+    }
+    private void RefreshChoices()
+    {
+        foreach (var (button, selected) in _frameChoices)
+        { var on = selected(); button.SetResourceReference(Control.BackgroundProperty, on ? "Accent" : "PanelFill"); button.SetResourceReference(Control.ForegroundProperty, on ? "AccentInk" : "Ink"); }
+    }
+    private Slider PercentSlider(string name, double max, double value, Action<double> changed)
+    {
+        var label = Ui.Text($"{name} · {value * 100:0}%", 12, true); label.Margin = new Thickness(0, 10, 0, 0); _controls.Children.Add(label);
+        var slider = new Slider { Minimum = 0, Maximum = max * 100, Value = value * 100 }; AutomationProperties.SetName(slider, name);
+        slider.ValueChanged += (_, _) => { label.Text = $"{name} · {slider.Value:0}%"; changed(slider.Value / 100); };
+        _controls.Children.Add(slider); return slider;
+    }
+    private void ColorField(Panel parent, string name, Func<string> get, Func<string, FrameOptions> set)
+    {
+        var label = Ui.Text(name, 12, true); label.Margin = new Thickness(0, 8, 0, 4); parent.Children.Add(label);
+        var box = new TextBox { Text = get(), Width = 96 }; AutomationProperties.SetName(box, name);
+        var swatch = new Border { Width = 30, Height = 30, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(8, 0, 0, 0) };
+        swatch.SetResourceReference(Border.BorderBrushProperty, "Edge");
+        void Paint() { try { swatch.Background = new SolidColorBrush(Imaging.FrameRenderer.ToColor(box.Text)); } catch (FormatException) { } }
+        box.TextChanged += (_, _) =>
+        {
+            try { _ = FrameLayout.ParseColor(box.Text); _error.Text = ""; Paint(); SetFrame(set(box.Text.Trim().StartsWith('#') ? box.Text.Trim().ToUpperInvariant() : "#" + box.Text.Trim().ToUpperInvariant())); }
+            catch (FormatException error) { _error.Text = name + ": " + error.Message; }
+        };
+        Paint(); var row = new StackPanel { Orientation = Orientation.Horizontal }; row.Children.Add(box); row.Children.Add(swatch); parent.Children.Add(row);
+        var swatches = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        foreach (var color in Palette)
+        {
+            var chip = new Button { Width = 18, Height = 18, MinHeight = 18, Padding = new Thickness(0), Margin = new Thickness(0, 0, 3, 3), Background = new SolidColorBrush(Imaging.FrameRenderer.ToColor(color)), ToolTip = color };
+            AutomationProperties.SetName(chip, name + " " + color); chip.Click += (_, _) => box.Text = color; swatches.Children.Add(chip);
+        }
+        parent.Children.Add(swatches);
+    }
+    private void BuildFrame()
+    {
+        _frameThumb = new global::Orbit.App.Imaging.ImageEngine().Thumbnail(_image, 1100);
+        _frameTimer.Tick += (_, _) => { _frameTimer.Stop(); RefreshFrame(); };
+        Heading("Khung");
+        PercentSlider("Khoảng viền", .4, _frame.Padding, v => SetFrame(_frame with { Padding = v }));
+        var aspects = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        foreach (var (name, ratio) in new (string, double?)[] { ("Theo ảnh", null), ("1:1", 1), ("4:5", .8), ("16:9", 16d / 9), ("9:16", 9d / 16) })
+            Choice(name, () => _frame.Aspect == ratio, () => SetFrame(_frame with { Aspect = ratio }), aspects);
+        _controls.Children.Add(aspects);
+        var heading = Ui.Text("Nền"); heading.FontWeight = FontWeights.SemiBold; heading.Margin = new Thickness(0, 14, 0, 8); _controls.Children.Add(heading);
+        var kinds = new WrapPanel();
+        foreach (var (name, kind) in new[] { ("Màu", FrameBackground.Solid), ("Chuyển màu", FrameBackground.Gradient), ("Họa tiết", FrameBackground.Texture), ("Ảnh", FrameBackground.Picture), ("Ảnh gốc mờ", FrameBackground.SourceBlur) })
+            Choice(name, () => _frame.Background == kind, () => { SetFrame(_frame with { Background = kind }); BuildBackgroundPanel(); }, kinds);
+        _controls.Children.Add(kinds); _controls.Children.Add(_backgroundPanel); BuildBackgroundPanel();
+        var photo = Ui.Text("Ảnh"); photo.FontWeight = FontWeights.SemiBold; photo.Margin = new Thickness(0, 14, 0, 0); _controls.Children.Add(photo);
+        PercentSlider("Bo góc", .2, _frame.Corner, v => SetFrame(_frame with { Corner = v }));
+        var shadow = new CheckBox { Content = "Đổ bóng", IsChecked = _frame.Shadow };
+        shadow.Checked += (_, _) => SetFrame(_frame with { Shadow = true }); shadow.Unchecked += (_, _) => SetFrame(_frame with { Shadow = false }); _controls.Children.Add(shadow);
+        var formats = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        Choice("PNG", () => !_frame.Jpeg, () => SetFrame(_frame with { Jpeg = false }), formats);
+        Choice("JPEG 92%", () => _frame.Jpeg, () => SetFrame(_frame with { Jpeg = true }), formats);
+        _controls.Children.Add(formats);
+        _summary.Margin = new Thickness(0, 10, 0, 0); _controls.Children.Add(_summary);
+        var note = Ui.Text("Ảnh gốc giữ nguyên từng pixel; chỉ phần khung bên ngoài được tạo thêm. Với nhiều file, khung tính theo tỷ lệ của từng ảnh.", 12, true);
+        note.Margin = new Thickness(0, 12, 0, 0); _controls.Children.Add(note);
+        RefreshChoices(); Loaded += (_, _) => RefreshFrame();
+    }
+    private void BuildBackgroundPanel()
+    {
+        _backgroundPanel.Children.Clear(); _frameChoices.RemoveAll(c => c.Button.Tag as string == "background");
+        void Tagged(WrapPanel panel) { foreach (var button in panel.Children.OfType<Button>()) button.Tag = "background"; _backgroundPanel.Children.Add(panel); }
+        switch (_frame.Background)
+        {
+            case FrameBackground.Solid:
+                ColorField(_backgroundPanel, "Màu nền", () => _frame.Color1, c => _frame with { Color1 = c }); break;
+            case FrameBackground.Gradient:
+                var presets = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+                foreach (var (name, from, to) in Gradients)
+                    Choice(name, () => _frame.Color1 == from && _frame.Color2 == to, () => { SetFrame(_frame with { Color1 = from, Color2 = to }); BuildBackgroundPanel(); }, presets);
+                Tagged(presets);
+                ColorField(_backgroundPanel, "Màu đầu", () => _frame.Color1, c => _frame with { Color1 = c });
+                ColorField(_backgroundPanel, "Màu cuối", () => _frame.Color2, c => _frame with { Color2 = c });
+                var angleLabel = Ui.Text($"Hướng · {_frame.Angle:0}°", 12, true); angleLabel.Margin = new Thickness(0, 8, 0, 0); _backgroundPanel.Children.Add(angleLabel);
+                var angle = new Slider { Minimum = 0, Maximum = 345, TickFrequency = 15, Value = _frame.Angle }; AutomationProperties.SetName(angle, "Hướng chuyển màu");
+                angle.ValueChanged += (_, _) => { angleLabel.Text = $"Hướng · {angle.Value:0}°"; SetFrame(_frame with { Angle = angle.Value }); };
+                _backgroundPanel.Children.Add(angle); break;
+            case FrameBackground.Texture:
+                var patterns = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+                foreach (var (name, texture) in new[] { ("Chấm bi", FrameTexture.Dots), ("Sọc chéo", FrameTexture.Stripes), ("Ô lưới", FrameTexture.Grid), ("Giấy", FrameTexture.Paper) })
+                    Choice(name, () => _frame.Texture == texture, () => SetFrame(_frame with { Texture = texture }), patterns);
+                Tagged(patterns);
+                ColorField(_backgroundPanel, "Màu nền", () => _frame.Color1, c => _frame with { Color1 = c });
+                ColorField(_backgroundPanel, "Màu họa tiết", () => _frame.Color2, c => _frame with { Color2 = c }); break;
+            case FrameBackground.Picture:
+                var chosen = Ui.Text(_frame.Picture == null ? "Chưa chọn ảnh nền." : Path.GetFileName(_frame.Picture), 12, true); chosen.Margin = new Thickness(0, 6, 0, 6);
+                _backgroundPanel.Children.Add(Ui.Button("Chọn ảnh nền…", PickPicture)); _backgroundPanel.Children.Add(chosen);
+                var blur = new CheckBox { Content = "Làm mờ ảnh nền", IsChecked = _frame.BlurPicture };
+                blur.Checked += (_, _) => SetFrame(_frame with { BlurPicture = true }); blur.Unchecked += (_, _) => SetFrame(_frame with { BlurPicture = false });
+                _backgroundPanel.Children.Add(blur); break;
+            default:
+                var tip = Ui.Text("Nền là chính ảnh này phóng đầy khung và làm mờ.", 12, true); tip.Margin = new Thickness(0, 6, 0, 0); _backgroundPanel.Children.Add(tip); break;
+        }
+        RefreshChoices();
+    }
+    private async void PickPicture()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Chọn ảnh nền", Filter = "Ảnh|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.heic;*.heif;*.tga" };
+        if (dialog.ShowDialog(this) != true) return;
+        var path = dialog.FileName; _error.Text = "Đang tải ảnh nền…";
+        try
+        {
+            var thumb = await Task.Run(() => { var engine = new global::Orbit.App.Imaging.ImageEngine(); return engine.Thumbnail(engine.Load(path), 1100); });
+            if (_closed) return;
+            _pictureThumb = thumb; _error.Text = ""; SetFrame(_frame with { Picture = path }); BuildBackgroundPanel();
+        }
+        catch (Exception error) { if (!_closed) _error.Text = "Không mở được ảnh nền: " + error.Message; }
+    }
+    private void RefreshFrame()
+    {
+        if (_closed || _frameThumb == null) return;
+        try
+        {
+            var output = FrameLayout.Compute(_image.PixelWidth, _image.PixelHeight, _frame);
+            _summary.Text = $"Đầu ra · {output.CanvasWidth} × {output.CanvasHeight} px" + (_files.Length > 1 ? "\nẢnh khác kích thước dùng cùng tỷ lệ khung." : "");
+            if (_frame.Background == FrameBackground.Picture && _pictureThumb == null) { _summary.Text += "\nChọn ảnh nền để xem trước."; return; }
+            _viewer.SetImage(Imaging.FrameRenderer.Render(_frameThumb, _frame, _pictureThumb));
+        }
+        catch (Exception error) when (error is ArgumentException or FormatException) { _summary.Text = error.Message; }
+    }
     private void BuildCrop()
     {
         Heading("Tỷ lệ khung");
@@ -199,6 +336,11 @@ public sealed class EditorWindow : GlassWindow
             {
                 if (!int.TryParse(_width.Text, out w) || !int.TryParse(_height.Text, out h)) throw new ArgumentException("Hãy nhập kích thước bằng số nguyên.");
                 global::Orbit.App.Imaging.ImageEngine.ValidatePixels(w, h);
+            }
+            if (_tool == ToolKind.Frame)
+            {
+                _ = FrameLayout.Compute(_image.PixelWidth, _image.PixelHeight, _frame);
+                Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, Quality: 92, Frame: _frame))); Close(); return;
             }
             Orbit.Queue.Add(_files.Select(path => new ImageRequest(path, _tool, w, h, _lock.IsChecked == true, (int)_quality.Value, _crop?.Region)));
             Close();

@@ -1,5 +1,16 @@
 # Thiết kế giao diện Orbit
 
+0.5.0:
+- **Khung nền** dùng chung khung editor với crop/resize/nén, có xem trước ảnh thu nhỏ với zoom/pan. Ô Khung nền nằm sau Nén JPEG trên menu ảnh.
+- Thứ tự cột phải:
+  - Khoảng viền và tỷ lệ khung.
+  - Nền (Màu / Chuyển màu / Họa tiết / Ảnh / Ảnh gốc mờ) với tùy chọn riêng của từng loại: ô mã `#RRGGBB` kèm 8 màu mẫu, 4 mẫu chuyển màu, góc theo quy ước CSS, 4 họa tiết, chọn ảnh nền và làm mờ.
+  - Bo góc, đổ bóng.
+  - PNG/JPEG.
+  - Kích thước đầu ra.
+- Mã màu sai báo lỗi tại chỗ và giữ màu hợp lệ trước đó.
+- Cửa sổ chính có nút **Xóa lịch sử** cạnh Cài đặt; danh sách tác vụ được giữ qua các lần mở.
+
 0.4.1: Cài đặt và cửa sổ Cập nhật Orbit có dòng “Tác giả: Nguyễn Mạnh Quyết”; không hiển thị địa chỉ nguồn tải cập nhật.
 
 0.4.0: Cài đặt có bật/tắt tự tải và cập nhật khi rảnh, nút mở cửa sổ Cập nhật Orbit. Cửa sổ này hiển thị bản đang dùng, trạng thái/tỷ lệ tải, Kiểm tra ngay/Cập nhật ngay/Để sau 4 giờ. Có đường vào từ menu khay. Không hiện popup liên tục khi mất mạng. Editor, job, menu hoặc kéo chuột chặn áp dụng; tự động chỉ khi mọi cửa sổ đã đóng về khay.

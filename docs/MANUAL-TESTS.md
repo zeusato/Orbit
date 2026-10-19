@@ -18,6 +18,13 @@
 
 ## Bộ công cụ
 
+- [ ] 0.5.0: mở ZIP 0.5.0 trên máy không cài .NET; OCR, WebP, PDF chạy được.
+- [ ] 0.5.0: bản 0.4.1 đang chạy tự cập nhật lên 0.5.0; sau đó Cập nhật Orbit vẫn kiểm tra được bản kế tiếp.
+- [ ] 0.5.0: ảnh HEIC chụp từ iPhone (dọc, ngang, Live Photo) mở đúng chiều, xuất JPEG/PNG đúng.
+- [ ] 0.5.0: Khung nền: kéo slider, đổi tỷ lệ, 5 kiểu nền, chọn ảnh nền, bo góc/bóng; Lưu ra đúng như xem trước; batch nhiều ảnh khác tỷ lệ.
+- [ ] 0.5.0: Khung nền trên ảnh lớn (~40–60 MP): thời gian, bộ nhớ, thông báo khi vượt giới hạn.
+- [ ] 0.5.0: tắt Orbit, mở lại: lịch sử tác vụ còn; Xóa lịch sử không xóa file kết quả.
+
 - [ ] 0.3.2: cuộn zoom tại con trỏ; 100%/vừa khung; pan bằng Space + kéo/chuột giữa trên crop; kéo ảnh trên resize/nén.
 - [ ] 0.3.2: Shift + kéo vẽ vùng mới khi đang zoom; kéo tám tay nắm với tỷ lệ khóa; đầu ra đúng vùng đã chọn.
 - [ ] 0.3.2: gõ ô crop rồi Enter/lưu ngay; số sai chặn lưu; preset Tự do giữ vùng cắt hiện tại.

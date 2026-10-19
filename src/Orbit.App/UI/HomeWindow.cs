@@ -22,7 +22,7 @@ public sealed class HomeWindow : GlassWindow
         _instruction = Ui.Text("", 14, true); _instruction.Margin = new Thickness(0, 9, 0, 20); intro.Children.Add(_instruction); body.Children.Add(intro); UpdateInstruction();
         var dropContent = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var dropTitle = Ui.Text("Thả file vào đây", 20); dropTitle.TextAlignment = TextAlignment.Center; dropContent.Children.Add(dropTitle);
-        var types = Ui.Text("Ảnh · WebP · PDF · Word · Excel · PowerPoint", 12, true); types.TextAlignment = TextAlignment.Center; types.Margin = new Thickness(0, 6, 0, 12); dropContent.Children.Add(types);
+        var types = Ui.Text("Ảnh · WebP · HEIC · PDF · Word · Excel · PowerPoint", 12, true); types.TextAlignment = TextAlignment.Center; types.Margin = new Thickness(0, 6, 0, 12); dropContent.Children.Add(types);
         var pick = Ui.Button("Chọn file…", PickFiles, true); pick.HorizontalAlignment = HorizontalAlignment.Center; dropContent.Children.Add(pick);
         var dropZone = Ui.Panel(dropContent, 20); dropZone.AllowDrop = true;
         void ResetDrop()
@@ -46,13 +46,15 @@ public sealed class HomeWindow : GlassWindow
         Grid.SetRow(dropZone, 1); body.Children.Add(dropZone);
         var jobsHeader = new DockPanel { Margin = new Thickness(0, 20, 0, 10) };
         var settings = Ui.Button("Cài đặt", () => new SettingsWindow(Orbit) { Owner = this }.ShowDialog()); DockPanel.SetDock(settings, Dock.Right); jobsHeader.Children.Add(settings);
+        var clear = Ui.Button("Xóa lịch sử", app.Queue.ClearHistory); clear.ToolTip = "Xóa danh sách tác vụ đã xong. Không xóa file kết quả."; clear.Margin = new Thickness(0, 0, 8, 0); DockPanel.SetDock(clear, Dock.Right); jobsHeader.Children.Add(clear);
         var heading = Ui.Text("Tác vụ gần đây", 17); heading.VerticalAlignment = VerticalAlignment.Center; jobsHeader.Children.Add(heading); Grid.SetRow(jobsHeader, 2); body.Children.Add(jobsHeader);
         var items = new ItemsControl { ItemsSource = app.Queue.Jobs, ItemTemplate = JobTemplate() };
         var scroll = new ScrollViewer { Content = items, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         var jobArea = new Grid(); jobArea.Children.Add(scroll);
         var empty = Ui.Text("Chưa có tác vụ.\nChọn file để hiện các công cụ tương thích.", 14, true);
         empty.HorizontalAlignment = HorizontalAlignment.Center; empty.VerticalAlignment = VerticalAlignment.Center; empty.TextAlignment = TextAlignment.Center;
-        jobArea.Children.Add(empty); app.Queue.Jobs.CollectionChanged += (_, _) => empty.Visibility = app.Queue.Jobs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        void SyncEmpty() => empty.Visibility = app.Queue.Jobs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        jobArea.Children.Add(empty); app.Queue.Jobs.CollectionChanged += (_, _) => SyncEmpty(); SyncEmpty();
         Grid.SetRow(jobArea, 3); body.Children.Add(jobArea); SetBody(body);
         var footer = new DockPanel { Margin = new Thickness(24, 0, 24, 18) };
         var background = Ui.Button("Thu xuống khay", Hide); DockPanel.SetDock(background, Dock.Right); footer.Children.Add(background);
@@ -72,7 +74,7 @@ public sealed class HomeWindow : GlassWindow
     }
     private void PickFiles()
     {
-        var dialog = new OpenFileDialog { Title = "Chọn file để xử lý", Multiselect = true, Filter = "File được hỗ trợ|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.tga;*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx|Tất cả file (ZIP / SHA-256)|*.*" };
+        var dialog = new OpenFileDialog { Title = "Chọn file để xử lý", Multiselect = true, Filter = "File được hỗ trợ|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff;*.gif;*.ico;*.avif;*.heic;*.heif;*.tga;*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx|Tất cả file (ZIP / SHA-256)|*.*" };
         if (dialog.ShowDialog(this) == true)
         {
             var files = dialog.FileNames;

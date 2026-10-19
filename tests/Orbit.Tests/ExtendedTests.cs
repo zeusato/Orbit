@@ -57,6 +57,36 @@ internal static partial class Program
                 var png=Engine.Execute(new(path,ToolKind.Png),CancellationToken.None); Assert(Size(png)==(80,60),"decode " + pair.Item2);
             }
         });
+        Check("HEIF brands separate HEIC from AVIF and ignore MP4", () =>
+        {
+            static string Ftyp(string name, params string[] brands)
+            {
+                var box = new System.Collections.Generic.List<byte>(); var size = 8 + 4 + 4 * brands.Length;
+                box.AddRange([0, 0, 0, (byte)size]); box.AddRange("ftyp"u8.ToArray()); box.AddRange(System.Text.Encoding.ASCII.GetBytes(brands[0]));
+                box.AddRange([0, 0, 0, 0]); foreach (var brand in brands.Skip(1)) box.AddRange(System.Text.Encoding.ASCII.GetBytes(brand));
+                box.AddRange(new byte[32]); var path = Path.Combine(_folder, name); File.WriteAllBytes(path, box.ToArray()); return path;
+            }
+            Assert(FileTypes.Detect(Ftyp("phone.heic", "heic", "mif1", "heic")) == FileKind.Heic, "HEIC major brand");
+            Assert(FileTypes.Detect(Ftyp("generic.heif", "mif1", "mif1", "heic", "hevc")) == FileKind.Heic, "generic HEIF with HEVC");
+            Assert(FileTypes.Detect(Ftyp("generic-av1.heif", "mif1", "mif1", "avif")) == FileKind.Avif, "generic HEIF with AV1");
+            Assert(FileTypes.Detect(Ftyp("clip.mp4", "isom", "isom", "mp42")) == FileKind.Unknown, "video is not an image");
+            var tools = ToolCatalog.ForFiles([FileKind.Heic]);
+            Assert(FileTypes.IsImage(FileKind.Heic) && tools.Contains(ToolKind.Jpeg) && tools.Contains(ToolKind.Png) && tools.Contains(ToolKind.Crop), "HEIC gets image tools");
+            Assert(ToolCatalog.SupportsPath("IMG_0001.HEIC"), "picker accepts .heic");
+        });
+        // Real HEVC payloads cannot be generated here (no HEIC encoder); point ORBIT_HEIC_SAMPLE at a real photo.
+        if (Environment.GetEnvironmentVariable("ORBIT_HEIC_SAMPLE") is { Length: > 0 } heic && File.Exists(heic))
+            Check("Real HEIC photo decodes and converts without touching the source", () =>
+            {
+                var copy = Path.Combine(_folder, "sample photo.heic"); File.Copy(heic, copy); var before = Hash(copy);
+                Assert(FileTypes.Detect(copy) == FileKind.Heic, "detected as HEIC");
+                using var info = new MagickImage(); info.Ping(copy);
+                var jpeg = Engine.Execute(new(copy, ToolKind.Jpeg), CancellationToken.None);
+                Assert(FileTypes.Detect(jpeg) == FileKind.Jpeg && Size(jpeg) == ((int)info.Width, (int)info.Height), "JPEG output with HEIC dimensions");
+                Assert(ReadPixels(jpeg).Where((_, i) => i % 4 != 3).Distinct().Count() > 16, "decoded real picture content");
+                Assert(Hash(copy) == before, "source unchanged");
+            });
+        else Console.WriteLine("SKIP Real HEIC decode (set ORBIT_HEIC_SAMPLE)");
         Check("Animated WebP is rejected without silently losing frames", () =>
         {
             var path=Path.Combine(_folder,"animated.webp"); using(var frames=new MagickImageCollection())

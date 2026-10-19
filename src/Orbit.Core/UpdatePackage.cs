@@ -52,6 +52,26 @@ public static class UpdatePackage
             if ((File.Exists(current) || Directory.Exists(current)) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0) throw new IOException("Không cập nhật qua liên kết thư mục.");
         return path;
     }
+    // The helper runs from a copy outside the install root so it can replace locked files.
+    // A self-contained helper needs every runtime asset its deps.json lists, not just its own DLL.
+    public static string[] RunnerFiles(string root)
+    {
+        var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase) { "Orbit.Updater.exe", "Orbit.Updater.dll", "Orbit.Updater.deps.json", "Orbit.Updater.runtimeconfig.json", "Orbit.Core.dll" };
+        using var deps = JsonDocument.Parse(File.ReadAllBytes(SafePath(root, "Orbit.Updater.deps.json")));
+        foreach (var target in deps.RootElement.GetProperty("targets").EnumerateObject())
+            foreach (var library in target.Value.EnumerateObject())
+                foreach (var group in new[] { "runtime", "native" })
+                    if (library.Value.TryGetProperty(group, out var assets))
+                        foreach (var asset in assets.EnumerateObject()) files.Add(Path.GetFileName(asset.Name));
+        foreach (var file in files)
+            if (!File.Exists(SafePath(root, file))) throw new FileNotFoundException("Thiếu file của helper cập nhật: " + file);
+        return files.ToArray();
+    }
+    public static void CopyRunner(string root, string runner)
+    {
+        Directory.CreateDirectory(runner);
+        foreach (var file in RunnerFiles(root)) File.Copy(SafePath(root, file), SafePath(runner, file), true);
+    }
     public static string[] Extract(string zip, string target)
     {
         if (Directory.Exists(target)) throw new IOException("Thư mục staging phải là mới.");

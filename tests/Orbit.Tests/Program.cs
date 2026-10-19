@@ -36,6 +36,7 @@ internal static partial class Program
             });
             return app.Run();
         }
+        if (args.Length == 3 && args[0] == "--frame-samples") return FrameSamples(args[1], args[2]);
         if (args.Length == 3 && args[0] == "--ocr-file") return DiagnoseOcr(args[1], args[2]);
         if (args.Length == 3 && args[0] == "--ocr-variants") return DiagnoseOcrVariants(args[1], args[2]);
         _folder = Path.Combine(args.Length > 0 ? Path.GetFullPath(args[0]) : Path.Combine(Environment.CurrentDirectory, "artifacts", "tests"), DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
@@ -175,6 +176,7 @@ internal static partial class Program
             Throws<ArgumentException>(() => Engine.Execute(new(source, ToolKind.Resize, 32768, 32768), CancellationToken.None));
         });
         CheckExtended(source, args.Contains("--office"));
+        CheckFrames(source);
         CheckTextExtraction(args.Contains("--office"));
         CheckLongOcr();
         CheckUpdates();
@@ -200,6 +202,8 @@ internal static partial class Program
                 Check("Hotkeys require exact modifiers and dragging; legacy preferences migrate", CheckHotkeyRules);
                 Check("Settings saves Shift+Space, updates instructions and preserves cancel", () => CheckHotkeySettingsUi(app));
                 await CheckEditors(app);
+                await CheckFrameEditor(app);
+                await CheckHistory(app);
                 app.Menu.ShowMenu(new Orbit.App.Interop.Native.Point(700, 420), [Path.Combine(_folder, "text-layer.pdf")]);
                 await app.Menu.Detection;
                 Assert(app.Menu.VisibleTools.Contains(ToolKind.PdfWord), "text PDF offers Word in real WPF menu");

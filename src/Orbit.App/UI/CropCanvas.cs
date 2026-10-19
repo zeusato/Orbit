@@ -5,7 +5,7 @@ namespace Orbit.App.UI;
 // Selection stays in source pixels; zoom and pan only change the viewport.
 public sealed class CropCanvas : FrameworkElement
 {
-    private readonly BitmapSource _image;
+    private BitmapSource _image;
     private BitmapSource _preview;
     private readonly bool _editable;
     private double _scale;
@@ -35,6 +35,13 @@ public sealed class CropCanvas : FrameworkElement
         };
     }
     public void SetPreview(BitmapSource image) { _preview = image; InvalidateVisual(); }
+    // Viewer-only: replaces the displayed image (e.g. a rendered frame) and refits when its size changes.
+    public void SetImage(BitmapSource image)
+    {
+        var resized = image.PixelWidth != _image.PixelWidth || image.PixelHeight != _image.PixelHeight;
+        _image = _preview = image; Region = new(0, 0, image.PixelWidth, image.PixelHeight);
+        if (resized && _fit) FitImage(); else if (resized) { _scale = Math.Min(_scale, Math.Max(8, FitScale)); ClampPan(); InvalidateVisual(); ZoomChanged?.Invoke(_scale); } else InvalidateVisual();
+    }
     private double FitScale => Math.Min(Math.Max(1, ActualWidth - 32) / _image.PixelWidth, Math.Max(1, ActualHeight - 32) / _image.PixelHeight);
     public void FitImage()
     {

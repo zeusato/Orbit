@@ -27,4 +27,10 @@ else if (args.Length == 4 && args[0] == "verify")
     if (!rsa.VerifyData(File.ReadAllBytes(args[1]), Convert.FromBase64String(File.ReadAllText(args[2])), HashAlgorithmName.SHA256, RSASignaturePadding.Pss)) throw new CryptographicException("Signing key does not match the app public key.");
     Console.WriteLine("Manifest signature matches the app public key.");
 }
-else throw new ArgumentException("init <private.pem> <public.pem> | sign <private.pem> <zip> <version> <manifest.json> | verify <manifest> <sig> <public.pem>");
+else if (args.Length == 3 && args[0] == "runner")
+{
+    // Same copy the app performs before applying an update.
+    Orbit.Core.UpdatePackage.CopyRunner(args[1], args[2]);
+    Console.WriteLine("Copied updater runner: " + Orbit.Core.UpdatePackage.RunnerFiles(args[1]).Length + " files");
+}
+else throw new ArgumentException("init <private.pem> <public.pem> | sign <private.pem> <zip> <version> <manifest.json> | verify <manifest> <sig> <public.pem> | runner <install> <runner>");

@@ -122,10 +122,16 @@ public sealed class ImageEngine
                 image = new CroppedBitmap(image, new Int32Rect(crop.X, crop.Y, crop.Width, crop.Height)); image.Freeze(); break;
             case ToolKind.Rotate:
                 image = new TransformedBitmap(image, new RotateTransform(90)); image.Freeze(); break;
+            case ToolKind.Frame:
+                var frame = request.Frame ?? throw new ArgumentException("Chưa chọn thông số khung.");
+                frame.Validate();
+                var picture = frame.Background == FrameBackground.Picture ? Load(frame.Picture!) : null;
+                cancellation.ThrowIfCancellationRequested();
+                image = FrameRenderer.Render(image, frame, picture); break;
         }
         cancellation.ThrowIfCancellationRequested(); progress?.Invoke(55);
         BitmapEncoder encoder;
-        if (request.Tool is ToolKind.Jpeg or ToolKind.Compress)
+        if (request.Tool is ToolKind.Jpeg or ToolKind.Compress || (request.Tool == ToolKind.Frame && request.Frame?.Jpeg == true))
         {
             if (request.Quality is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(request.Quality));
             image = FlattenWhite(image);
@@ -173,6 +179,15 @@ public sealed class ImageEngine
     {
         var format = kind switch { FileKind.Webp => MagickFormat.WebP, FileKind.Avif => MagickFormat.Avif, FileKind.Heic => MagickFormat.Heic, FileKind.Tga => MagickFormat.Tga, _ => MagickFormat.Ico };
         var settings = new MagickReadSettings { Format = format };
+        if (kind == FileKind.Heic)
+        {
+            // HEIF image sequences are animations. Still HEIC may hold extra top-level items
+            // (bursts, edits); viewers show the primary image, which libheif decodes first.
+            Span<byte> brand = stackalloc byte[12];
+            if (source.Read(brand) == 12 && (brand[8..].SequenceEqual("msf1"u8) || brand[8..].SequenceEqual("hevs"u8)))
+                throw new NotSupportedException("HEIF dạng chuỗi ảnh/ảnh động chưa được hỗ trợ.");
+            source.Position = 0; settings.FrameIndex = 0; settings.FrameCount = 1;
+        }
         using var headers = new MagickImageCollection(); headers.Ping(source, settings);
         if (headers.Count == 0 || (headers.Count != 1 && kind != FileKind.Ico))
             throw new NotSupportedException("Ảnh động hoặc nhiều frame chưa được hỗ trợ.");

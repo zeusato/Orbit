@@ -1,5 +1,14 @@
 # Kế hoạch triển khai Orbit
 
+Cập nhật 0.5.0 theo chốt của Đại ca:
+- Nâng .NET 10 LTS, đóng gói self-contained.
+- Bật HEIC.
+- Thay "xóa/thay nền AI" bằng **Khung nền**: mở rộng canvas và tô nền màu/chuyển màu/họa tiết/ảnh; không can thiệp vào nền bên trong ảnh.
+- Tự phục hồi khi cập nhật bị ngắt, tự dọn backup/bản tải, lưu lịch sử tác vụ.
+- Bỏ qua bộ đo độ chính xác OCR ở vòng này.
+- Âm thanh/video bàn tiếp sau khi các mục trên ổn định; đề xuất bước 1 dùng Media Foundation, FFmpeg LGPL là tùy chọn.
+- Authenticode cần mua chứng chỉ nên chưa làm.
+
 Cập nhật 0.4.0: thêm cập nhật portable từ GitHub Releases `zeusato/Orbit`. Manifest ký bằng khóa riêng, client kiểm tra trước khi tải/áp dụng; helper backup/rollback, không installer hoặc model mới. Push lên main với số phiên bản mới sẽ tự build/test/ký, tạo tag và publish release. Xem [UPDATES.md](UPDATES.md).
 
 Cập nhật 0.3.2: ưu tiên UX các công cụ đang có, giữ ứng dụng nhỏ. Crop có viewport zoom/pan, tay nắm cạnh/góc và xác thực vùng cắt trước lưu. Resize/nén dùng chung viewport; nén có xem trước JPEG giới hạn kích thước. Menu kéo thả bỏ yêu cầu di chuyển lần hai sau nhận diện, hỗ trợ chờ nhận diện và giữ trên Thêm để chuyển trang. Không tích hợp Python/PyTorch/VietOCR theo quyết định của Đại ca.

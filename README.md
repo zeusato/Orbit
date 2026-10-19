@@ -1,10 +1,10 @@
-# Orbit 0.4.1
+# Orbit 0.5.0
 
 Đại ca có thể xử lý ảnh, PDF và tài liệu Office tại máy bằng menu tròn. Em đã sửa nền vuông ngoài vòng, thêm nhận dạng nội dung file và WebP. File không được tải lên dịch vụ bên ngoài.
 
 ## Chạy ứng dụng
 
-Yêu cầu Windows 11 x64 và .NET 8 Desktop Runtime x64; OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.4.1-win-x64.zip`. Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
+Yêu cầu Windows 11 x64; từ 0.5.0 bản ZIP đã kèm .NET 10 (self-contained), không cần cài .NET riêng. OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.5.0-win-x64.zip` (khoảng 119 MB). Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
 
 ## Cập nhật
 
@@ -36,7 +36,7 @@ Vòng kính chỉ vẽ bên trong hình tròn. Nền mờ là ảnh chụp trong
 
 | Nguồn | Thao tác |
 | --- | --- |
-| JPEG, PNG, WebP, BMP, TIFF, GIF tĩnh, ICO, AVIF, TGA | Chuyển PNG/JPEG/WebP/BMP/TIFF/GIF/ICO/PDF; resize, crop, xoay 90°, nén JPEG; OCR → TXT |
+| JPEG, PNG, WebP, BMP, TIFF, GIF tĩnh, ICO, AVIF, HEIC/HEIF, TGA | Chuyển PNG/JPEG/WebP/BMP/TIFF/GIF/ICO/PDF; resize, crop, xoay 90°, nén JPEG, khung nền; OCR → TXT |
 | PDF có lớp chữ | Word: DOCX sửa được, giữ dòng/ngắt trang cơ bản, không phục dựng bảng/hình; không cần cài Word |
 | PDF, gồm scan và trang trộn | Lấy chữ → TXT UTF-8; đọc lớp chữ hoặc OCR Việt/Anh theo từng trang; không giữ trình bày |
 | PDF | Xuất tất cả trang thành PNG/JPEG 150 DPI; tách trang thành từng PDF; ghép nhiều PDF theo tên file |
@@ -44,7 +44,9 @@ Vòng kính chỉ vẽ bên trong hình tròn. Nền mờ là ảnh chụp trong
 | DOCX | Trích văn bản thân tài liệu thành TXT UTF-8, không cần Word |
 | File bất kỳ | Tạo ZIP riêng cho từng file; lưu mã SHA-256 |
 
-Chọn từ hai PDF để hiện Ghép PDF. Batch tối đa 128 file và chỉ hiện các công cụ chung; crop chỉ nhận một ảnh. WebP xuất lossless và giữ alpha; JPEG ghép nền trắng; GIF có tối đa 256 màu; ICO thu về tối đa 256 px. AVIF và TGA hiện là định dạng đầu vào. Ảnh động, TIFF nhiều trang và HEIC/HEIF chưa được hỗ trợ.
+Chọn từ hai PDF để hiện Ghép PDF. Batch tối đa 128 file và chỉ hiện các công cụ chung; crop chỉ nhận một ảnh. WebP xuất lossless và giữ alpha; JPEG ghép nền trắng; GIF có tối đa 256 màu; ICO thu về tối đa 256 px. AVIF, HEIC/HEIF và TGA là định dạng đầu vào. HEIC giải mã bằng libheif đi kèm, không cần HEIF Extension của Windows; file có nhiều ảnh lấy ảnh chính, HEIF chuỗi/ảnh động bị từ chối. Ảnh động và TIFF nhiều trang chưa được hỗ trợ.
+
+**Khung nền** mở rộng canvas quanh ảnh (khoảng viền 0–40% cạnh dài, tỷ lệ Theo ảnh/1:1/4:5/16:9/9:16) và tô nền: màu, chuyển màu, họa tiết (chấm bi, sọc chéo, ô lưới, giấy), ảnh khác (có thể làm mờ) hoặc chính ảnh gốc làm mờ. Có bo góc, đổ bóng, xuất PNG hoặc JPEG 92%. Ảnh gốc giữ nguyên từng pixel; Orbit không tách hay sửa nền bên trong ảnh. Đầu ra `_frame` tối đa 60 megapixel.
 
 ## File đầu ra và giới hạn
 
@@ -60,7 +62,7 @@ Office → PDF mở tài liệu chỉ đọc, tắt macro trong phiên xử lý 
 
 ## Phát triển và kiểm thử
 
-SDK .NET 8.0.413 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/package nằm trong dự án.
+SDK .NET 10.0.402 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/package nằm trong dự án.
 
 ```powershell
 .\scripts\prepare-ocr.ps1
@@ -70,10 +72,10 @@ SDK .NET 8.0.413 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/packa
 .\scripts\run.ps1
 ```
 
-57 kiểm thử mặc định; thêm 4 kiểm thử Office khi dùng `-OfficeTest`. `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback), cần khóa ký cục bộ; fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
+72 kiểm thử mặc định; thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
 
-`--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ hiện chỉ giữ trong phiên.
+`--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt.
 
-Chi tiết kiểm chứng và giới hạn: [bản 0.4.1](docs/RELEASE-0.4.1.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
+Chi tiết kiểm chứng và giới hạn: [bản 0.5.0](docs/RELEASE-0.5.0.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
 
-.NET 8 hết hỗ trợ ngày 10/11/2026; cần nâng lên .NET LTS còn được hỗ trợ trước phát hành rộng rãi, theo [chính sách Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
+Từ 0.5.0 dùng .NET 10 LTS, thay .NET 8 hết hỗ trợ ngày 10/11/2026, theo [chính sách Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).

@@ -46,6 +46,56 @@ public static class UpdateTransaction
             throw;
         }
     }
+    // A journal without completed/rolled-back markers means the helper stopped mid-replacement
+    // (power loss, kill). The install folder may hold a mix of versions.
+    public static string[] FindIncomplete(string root)
+    {
+        var folder = Path.Combine(Path.GetFullPath(root), ".orbit-backup");
+        if (!Directory.Exists(folder)) return [];
+        return Directory.EnumerateDirectories(folder)
+            .Where(d => Guid.TryParseExact(Path.GetFileName(d), "N", out _) && File.Exists(Path.Combine(d, "journal.json"))
+                && !File.Exists(Path.Combine(d, "completed.txt")) && !File.Exists(Path.Combine(d, "rolled-back.txt")))
+            .OrderBy(Directory.GetCreationTimeUtc).ToArray();
+    }
+    public static void Recover(string root, string backup)
+    {
+        root = Path.GetFullPath(root);
+        var journal = JsonSerializer.Deserialize<UpdateJournal>(File.ReadAllText(Path.Combine(backup, "journal.json"))) ?? throw new InvalidDataException("Journal cập nhật rỗng.");
+        if (!Path.GetFullPath(journal.Root).TrimEnd('\\').Equals(root.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Journal thuộc thư mục Orbit khác.");
+        // The snapshot is complete before the first replacement, so restoring every entry is always safe.
+        Restore(root, backup, journal.Files);
+        File.WriteAllText(Path.Combine(backup, "rolled-back.txt"), DateTime.UtcNow.ToString("O") + " recovered");
+    }
+    // Keeps the newest completed backup and any download still pending; never touches
+    // incomplete journals or names that are not Orbit's GUID folders.
+    public static int Cleanup(string root, string downloads, string? keepDownload)
+    {
+        int removed = 0;
+        var backups = Path.Combine(Path.GetFullPath(root), ".orbit-backup");
+        if (Directory.Exists(backups))
+        {
+            var finished = Directory.EnumerateDirectories(backups).Where(d => Guid.TryParseExact(Path.GetFileName(d), "N", out _))
+                .Where(d => File.Exists(Path.Combine(d, "completed.txt")) || File.Exists(Path.Combine(d, "rolled-back.txt")))
+                .OrderByDescending(d => File.GetLastWriteTimeUtc(Path.Combine(d, "journal.json"))).ToList();
+            var newestCompleted = finished.FirstOrDefault(d => File.Exists(Path.Combine(d, "completed.txt")));
+            foreach (var dir in finished.Where(d => d != newestCompleted)) removed += TryDelete(dir);
+        }
+        if (Directory.Exists(downloads))
+            foreach (var dir in Directory.EnumerateDirectories(downloads).Where(d => Guid.TryParseExact(Path.GetFileName(d), "N", out _)))
+                if (!string.Equals(Path.GetFullPath(dir), keepDownload == null ? null : Path.GetFullPath(keepDownload), StringComparison.OrdinalIgnoreCase) && Directory.GetLastWriteTimeUtc(dir) < DateTime.UtcNow.AddMinutes(-10))
+                    removed += TryDelete(dir);
+        return removed;
+    }
+    private static int TryDelete(string dir)
+    {
+        try
+        {
+            // Do not follow junctions out of Orbit's folders.
+            if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) != 0) return 0;
+            Directory.Delete(dir, true); return 1;
+        }
+        catch (IOException) { return 0; } catch (UnauthorizedAccessException) { return 0; }
+    }
     public static void Restore(string root, string backup, IEnumerable<UpdateBackupFile> files)
     {
         foreach (var item in files)

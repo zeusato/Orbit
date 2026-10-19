@@ -166,6 +166,7 @@ public sealed class RadialWindow : Window
             ToolKind.Resize => "M3,9 L3,3 9,3 M15,21 L21,21 21,15 M4,4 L10,10 M20,20 L14,14 M3,15 L3,21 9,21 M15,3 L21,3 21,9",
             ToolKind.Crop => "M7,2 L7,17 22,17 M2,7 L17,7 17,22",
             ToolKind.Rotate => "M20,8 A9,9 0 1 0 21,15 M20,2 L20,8 14,8",
+            ToolKind.Frame => "M2,3 L22,3 22,21 2,21 Z M7,8 L17,8 17,16 7,16 Z",
             _ => "M3,3 L9,9 M9,3 L9,9 3,9 M21,21 L15,15 M15,21 L15,15 21,15"
         };
         var icon = new WpfPath { Data = Geometry.Parse(data), Width = 24, Height = 24, StrokeThickness = 1.7, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Center };

@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $orbitRoot = Split-Path -Parent $PSScriptRoot
 $orbitModelDir = Join-Path $orbitRoot 'assets\tessdata'
 New-Item -ItemType Directory -Path $orbitModelDir -Force | Out-Null

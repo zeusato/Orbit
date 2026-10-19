@@ -60,6 +60,22 @@ public sealed class UpdateService : IDisposable
         }
         catch (Exception error) { if (!_stop.IsCancellationRequested) SetStatus("Không khôi phục được bản tải trước: " + error.Message); }
         finally { _busy = false; if (!_stop.IsCancellationRequested) _timer.Start(); Changed?.Invoke(); }
+        await CleanupAsync();
+    }
+    // Old downloads (~100+ MB each) and superseded backups; the newest completed backup stays for manual rollback.
+    private async Task CleanupAsync()
+    {
+        var root = AppContext.BaseDirectory; var keep = _work;
+        try
+        {
+            await Task.Run(() =>
+            {
+                if (UpdateTransaction.FindIncomplete(root).Length > 0) return;
+                using (new FileStream(Path.Combine(root, ".orbit-update.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                    UpdateTransaction.Cleanup(root, Path.Combine(AppSettings.DataDirectory, "updates"), keep);
+            }, _stop.Token);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or OperationCanceledException) { }
     }
     private void SetStatus(string value) { Status = value; Changed?.Invoke(); }
     public void Defer()
@@ -169,8 +185,8 @@ public sealed class UpdateService : IDisposable
         Process? helper = null;
         try
         {
-            var root = AppContext.BaseDirectory; var runner = Path.Combine(_work, "runner"); Directory.CreateDirectory(runner);
-            foreach (var name in new[] { "Orbit.Updater.exe", "Orbit.Updater.dll", "Orbit.Updater.deps.json", "Orbit.Updater.runtimeconfig.json", "Orbit.Core.dll" }) File.Copy(Path.Combine(root, name), Path.Combine(runner, name), true);
+            var root = AppContext.BaseDirectory; var runner = Path.Combine(_work, "runner");
+            await Task.Run(() => UpdatePackage.CopyRunner(root, runner));
             using var parent = Process.GetCurrentProcess(); var id = Guid.NewGuid().ToString("N");
             File.WriteAllText(Path.Combine(_work, "request.json"), JsonSerializer.Serialize(new UpdatePlan(root, parent.Id, parent.StartTime.ToUniversalTime().Ticks, id)));
             using var ready = new EventWaitHandle(false, EventResetMode.ManualReset, "Local\\Orbit.Update.Ready." + id);

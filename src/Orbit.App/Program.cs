@@ -56,7 +56,9 @@ public sealed class OrbitApplication : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e); Theme.Apply(Settings); Theme.InstallStyles();
-        Queue = new JobQueue(Dispatcher); Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
+        // Diagnostic and test sessions keep no history on disk.
+        var history = _args.Contains("--no-integrations") || _args.Contains("--render-previews") ? null : Path.Combine(AppSettings.DataDirectory, "history.json");
+        Queue = new JobQueue(Dispatcher, history); Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
         MainWindow = _home;
         // Diagnostic mode also lets integration tests exercise the real WPF views
         // without installing global hooks or a notification-area icon.
@@ -65,6 +67,7 @@ public sealed class OrbitApplication : Application
         {
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => RenderPreviews(_args[1])); return;
         }
+        if (!_args.Contains("--update-health") && TryRecoverInterruptedUpdate()) return;
         _icon = CreateIcon();
         _tray = new Forms.NotifyIcon { Icon = _icon, Text = "Orbit · Công cụ xử lý file", Visible = true };
         var context = new Forms.ContextMenuStrip();
@@ -117,6 +120,36 @@ public sealed class OrbitApplication : Application
         }
     }
 
+    // An update helper killed mid-replacement leaves a journal without a result marker. This
+    // process runs from the install folder, so a copied helper restores the backup after we exit.
+    private bool TryRecoverInterruptedUpdate()
+    {
+        Process? helper = null;
+        try
+        {
+            var root = AppContext.BaseDirectory;
+            var backup = UpdateTransaction.FindIncomplete(root).LastOrDefault();
+            if (backup == null) return false;
+            if (File.Exists(Path.Combine(backup, "recovery-attempted.txt")))
+            {
+                _home?.SetStatus("Bản cập nhật trước bị gián đoạn và chưa tự khôi phục được. Xem thư mục .orbit-backup trong thư mục Orbit.");
+                return false;
+            }
+            try { using var probe = new FileStream(Path.Combine(root, ".orbit-update.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
+            catch (IOException) { return false; } // A helper is still working on it.
+            var id = Path.GetFileName(backup); var runner = Path.Combine(AppSettings.DataDirectory, "updates", Guid.NewGuid().ToString("N"), "runner");
+            UpdatePackage.CopyRunner(root, runner);
+            using var self = Process.GetCurrentProcess();
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(runner)!, "request.json"), System.Text.Json.JsonSerializer.Serialize(new UpdatePlan(root, self.Id, self.StartTime.ToUniversalTime().Ticks, id, !_args.Contains("--background"))));
+            using var ready = new EventWaitHandle(false, EventResetMode.ManualReset, "Local\\Orbit.Update.Ready." + id);
+            helper = Process.Start(new ProcessStartInfo(Path.Combine(runner, "Orbit.Updater.exe")) { UseShellExecute = false, CreateNoWindow = true, Arguments = "--recover", WorkingDirectory = runner });
+            if (helper == null || !ready.WaitOne(TimeSpan.FromSeconds(30))) { if (helper is { HasExited: false }) helper.Kill(); return false; }
+            Shutdown(); return true;
+        }
+        catch (Exception error) { _home?.SetStatus("Chưa khôi phục được bản cập nhật bị gián đoạn: " + error.Message); return false; }
+        finally { helper?.Dispose(); }
+    }
+
     private void OfferStartup()
     {
         if (Settings.StartupPromptCompleted || Dispatcher.HasShutdownStarted) return;
@@ -146,7 +179,7 @@ public sealed class OrbitApplication : Application
         if (tool == ToolKind.More) return;
         if (tool == ToolKind.PdfMerge)
         { Queue.Add([new ImageRequest(files[0], tool, Sources: files)]); return; }
-        if (tool is not (ToolKind.Resize or ToolKind.Crop or ToolKind.Compress))
+        if (tool is not (ToolKind.Resize or ToolKind.Crop or ToolKind.Compress or ToolKind.Frame))
         { Queue.Add(files.Select(path => new ImageRequest(path, tool))); return; }
         if (_openingEditor) { ShowHome(); _home!.SetStatus("Đang mở trình chỉnh sửa. Hãy thử lại sau khi ảnh được tải."); return; }
         _openingEditor = true;
@@ -224,6 +257,7 @@ public sealed class OrbitApplication : Application
             _home!.Show(); SaveWindow(_home, Path.Combine(folder, "home-dark.png"));
             Menu.ShowMenu(new Native.Point(700, 420), [sample]); await Menu.Detection; SaveWindow(Menu, Path.Combine(folder, "menu-dark.png")); Menu.HideMenu();
             var editor = new EditorWindow(this, ToolKind.Crop, [sample], image); editor.Show(); SaveWindow(editor, Path.Combine(folder, "crop-dark.png")); editor.Close();
+            var frame = new EditorWindow(this, ToolKind.Frame, [sample], image); frame.Show(); await Task.Delay(400); SaveWindow(frame, Path.Combine(folder, "frame-dark.png")); frame.Close();
             Settings.Theme = "Light"; RefreshTheme(); SaveWindow(_home, Path.Combine(folder, "home-light.png"));
             File.WriteAllText(Path.Combine(folder, "render-result.txt"), $"Native WPF renders and WebP/PDF/OCR runtime smoke checks completed. DWM accepted: home={_home.BackdropAvailable}, menu={Menu.BackdropAvailable}");
             Shutdown(0);

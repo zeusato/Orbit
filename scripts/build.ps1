@@ -1,4 +1,4 @@
-param([ValidateSet('Debug','Release')][string]$Configuration = 'Release', [switch]$Test, [switch]$OfficeTest, [string]$ArtifactsPath)
+﻿param([ValidateSet('Debug','Release')][string]$Configuration = 'Release', [switch]$Test, [switch]$OfficeTest, [string]$ArtifactsPath)
 $ErrorActionPreference = 'Stop'
 $orbitRoot = Split-Path -Parent $PSScriptRoot
 $env:DOTNET_CLI_HOME = Join-Path $orbitRoot '.dotnet'

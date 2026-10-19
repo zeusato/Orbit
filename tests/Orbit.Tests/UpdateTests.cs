@@ -74,6 +74,48 @@ internal static partial class Program
             Assert(File.ReadAllText(Path.Combine(root, "Orbit.exe")) == "old", "partial apply restored");
             Assert(!Directory.EnumerateFiles(root, "*.orbit-new-*").Any(), "no staged fragments");
         });
+        Check("Updater runner copies helper with every runtime asset from deps.json", () =>
+        {
+            var root = Path.Combine(_folder, "runner-root"); var runner = Path.Combine(_folder, "runner-copy"); Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "Orbit.Updater.deps.json"), "{\"targets\":{\".NETCoreApp,Version=v10.0/win-x64\":{\"Orbit.Updater/1.0.0\":{\"runtime\":{\"Orbit.Updater.dll\":{}}},\"runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.0\":{\"runtime\":{\"System.Runtime.dll\":{}},\"native\":{\"hostfxr.dll\":{},\"coreclr.dll\":{}}}}}}");
+            foreach (var name in new[] { "Orbit.Updater.exe", "Orbit.Updater.dll", "Orbit.Updater.runtimeconfig.json", "Orbit.Core.dll", "System.Runtime.dll", "hostfxr.dll", "Orbit.exe", "Magick.Native-Q8-x64.dll" }) File.WriteAllText(Path.Combine(root, name), name);
+            Throws<FileNotFoundException>(() => UpdatePackage.RunnerFiles(root));
+            File.WriteAllText(Path.Combine(root, "coreclr.dll"), "runtime");
+            UpdatePackage.CopyRunner(root, runner);
+            foreach (var name in new[] { "Orbit.Updater.exe", "Orbit.Updater.deps.json", "Orbit.Core.dll", "System.Runtime.dll", "hostfxr.dll", "coreclr.dll" }) Assert(File.Exists(Path.Combine(runner, name)), "runner has " + name);
+            Assert(!File.Exists(Path.Combine(runner, "Orbit.exe")) && !File.Exists(Path.Combine(runner, "Magick.Native-Q8-x64.dll")), "app-only files stay in install folder");
+        });
+        Check("Interrupted update journal is found once and restores the full snapshot", () =>
+        {
+            var root = Path.Combine(_folder, "install-interrupted"); var id = Guid.NewGuid().ToString("N"); var backup = Path.Combine(root, ".orbit-backup", id);
+            Directory.CreateDirectory(Path.Combine(backup, "files"));
+            File.WriteAllText(Path.Combine(root, "Orbit.exe"), "new-half"); File.WriteAllText(Path.Combine(root, "added.dll"), "new only"); File.WriteAllText(Path.Combine(root, "notes.txt"), "user");
+            File.WriteAllText(Path.Combine(backup, "files", "Orbit.exe"), "old");
+            File.WriteAllText(Path.Combine(backup, "journal.json"), JsonSerializer.Serialize(new UpdateJournal(root, [new("Orbit.exe", true), new("added.dll", false)])));
+            Assert(UpdateTransaction.FindIncomplete(root).Single() == backup, "incomplete journal detected");
+            UpdateTransaction.Recover(root, backup);
+            Assert(File.ReadAllText(Path.Combine(root, "Orbit.exe")) == "old" && !File.Exists(Path.Combine(root, "added.dll")) && File.ReadAllText(Path.Combine(root, "notes.txt")) == "user", "old state restored, user file kept");
+            Assert(UpdateTransaction.FindIncomplete(root).Length == 0, "marked as rolled back");
+            var other = Path.Combine(_folder, "install-other"); Directory.CreateDirectory(other);
+            Throws<InvalidDataException>(() => UpdateTransaction.Recover(other, backup));
+        });
+        Check("Update cleanup keeps newest completed backup, pending and recent downloads", () =>
+        {
+            var root = Path.Combine(_folder, "install-cleanup"); var downloads = Path.Combine(_folder, "downloads-cleanup");
+            string Backup(string marker, int ageMinutes)
+            {
+                var dir = Path.Combine(root, ".orbit-backup", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, "journal.json"), "{}"); File.SetLastWriteTimeUtc(Path.Combine(dir, "journal.json"), DateTime.UtcNow.AddMinutes(-ageMinutes));
+                if (marker.Length > 0) File.WriteAllText(Path.Combine(dir, marker), "x"); return dir;
+            }
+            string Download(int ageMinutes) { var dir = Path.Combine(downloads, Guid.NewGuid().ToString("N")); Directory.CreateDirectory(dir); File.WriteAllText(Path.Combine(dir, "package.zip"), "zip"); Directory.SetLastWriteTimeUtc(dir, DateTime.UtcNow.AddMinutes(-ageMinutes)); return dir; }
+            var oldDone = Backup("completed.txt", 300); var newDone = Backup("completed.txt", 5); var rolled = Backup("rolled-back.txt", 1); var broken = Backup("", 600);
+            var foreign = Path.Combine(root, ".orbit-backup", "keep-me"); Directory.CreateDirectory(foreign);
+            var stale = Download(120); var pending = Download(240); var fresh = Download(1); var other = Path.Combine(downloads, "not-a-guid"); Directory.CreateDirectory(other);
+            Assert(UpdateTransaction.Cleanup(root, downloads, pending) == 3, "removed old completed, rolled-back and stale download");
+            Assert(!Directory.Exists(oldDone) && !Directory.Exists(rolled) && !Directory.Exists(stale), "superseded removed");
+            Assert(Directory.Exists(newDone) && Directory.Exists(broken) && Directory.Exists(foreign) && Directory.Exists(pending) && Directory.Exists(fresh) && Directory.Exists(other), "kept latest, incomplete, foreign, pending and in-progress");
+        });
         Check("Release assets are restricted to the configured repository and exact version", () =>
         {
             using var good = JsonDocument.Parse("{\"assets\":[{\"name\":\"orbit-update.json\",\"browser_download_url\":\"https://github.com/zeusato/Orbit/releases/download/v0.4.1/orbit-update.json\"}]}");

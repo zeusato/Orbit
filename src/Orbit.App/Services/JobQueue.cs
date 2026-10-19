@@ -7,9 +7,14 @@ using Orbit.App.Imaging;
 
 namespace Orbit.App.Services;
 
+public sealed record JobRecord(string Source, ToolKind Tool, JobState State, string? Output, string? Error, DateTime FinishedUtc);
+
 public sealed class ImageJob(ImageRequest request) : INotifyPropertyChanged
 {
     public ImageRequest Request { get; } = request;
+    public DateTime FinishedUtc { get; internal set; }
+    internal static ImageJob Restore(JobRecord record) => new(new ImageRequest(record.Source, record.Tool))
+    { _state = record.State, _progress = record.State == JobState.Completed ? 100 : 0, _output = record.Output, _error = record.Error, FinishedUtc = record.FinishedUtc };
     public string Name => Path.GetFileName(Request.Source);
     public string Tool => ToolCatalog.Description(Request.Tool);
     public CancellationTokenSource Cancellation { get; } = new();
@@ -43,9 +48,24 @@ public sealed class JobQueue : IDisposable
     public bool HasPending => Jobs.Any(j => j.CanCancel);
     public event Action<ImageJob>? Finished;
 
-    public JobQueue(Dispatcher ui)
+    private readonly string? _historyFile;
+    public const int HistoryLimit = 200;
+    // History holds only finished rows (paths, tool, result) in the local data folder; never file contents.
+    public JobQueue(Dispatcher ui, string? historyFile = null)
     {
-        _ui = ui;
+        _ui = ui; _historyFile = historyFile;
+        if (historyFile != null)
+        {
+            try
+            {
+                if (File.Exists(historyFile))
+                    foreach (var record in (System.Text.Json.JsonSerializer.Deserialize<JobRecord[]>(File.ReadAllText(historyFile)) ?? []).Take(HistoryLimit))
+                        if (record is { Source.Length: > 0 } && Enum.IsDefined(record.Tool) && record.State is JobState.Completed or JobState.Failed or JobState.Cancelled)
+                            Jobs.Add(ImageJob.Restore(record));
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
+        }
+        Finished += job => { job.FinishedUtc = DateTime.UtcNow; SaveHistory(); };
         _worker = new Thread(Work) { IsBackground = true, Name = "Orbit image worker" };
         _worker.SetApartmentState(ApartmentState.STA); _worker.Start();
     }
@@ -95,6 +115,22 @@ public sealed class JobQueue : IDisposable
         _ => error.Message
     };
 
+    public void SaveHistory()
+    {
+        if (_historyFile == null) return;
+        try
+        {
+            var records = Jobs.Where(j => !j.CanCancel).Take(HistoryLimit).Select(j => new JobRecord(j.Request.Source, j.Request.Tool, j.State, j.Output, j.Error, j.FinishedUtc)).ToArray();
+            Directory.CreateDirectory(Path.GetDirectoryName(_historyFile)!);
+            var temp = _historyFile + ".tmp"; File.WriteAllText(temp, System.Text.Json.JsonSerializer.Serialize(records)); File.Move(temp, _historyFile, true);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+    }
+    public void ClearHistory()
+    {
+        for (int i = Jobs.Count - 1; i >= 0; i--) if (!Jobs[i].CanCancel) Jobs.RemoveAt(i);
+        SaveHistory();
+    }
     public void CancelAll() { foreach (var job in Jobs.Where(j => j.CanCancel)) job.Cancellation.Cancel(); }
     public void Dispose()
     {
