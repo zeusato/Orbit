@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup><EmbeddedResource Include="../../assets/update-public-key.pem" LogicalName="Orbit.UpdatePublicKey" /></ItemGroup>
+</Project>

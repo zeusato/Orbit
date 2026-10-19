@@ -1,0 +1,62 @@
+name: Portable release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: orbit-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whether this version is already released
+        id: version
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = ([xml](Get-Content src/Orbit.App/Orbit.App.csproj -Raw)).Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Version must be X.Y.Z' }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag must match app version' }
+          $releases = gh release list --limit 1000 --json tagName,isDraft | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot read releases; abort instead of overwriting' }
+          $exists = @($releases | Where-Object tagName -eq "v$version").Count -gt 0
+          "publish=$((!$exists).ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          if ($exists) { Write-Output "Release v$version already exists; skipped." }
+      - uses: actions/setup-dotnet@v4
+        if: steps.version.outputs.publish == 'true'
+        with:
+          dotnet-version: '8.0.413'
+      - name: Load signing key
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          ORBIT_RELEASE_PRIVATE_KEY: ${{ secrets.ORBIT_RELEASE_PRIVATE_KEY }}
+        run: |
+          if (!$env:ORBIT_RELEASE_PRIVATE_KEY) { throw 'Missing ORBIT_RELEASE_PRIVATE_KEY secret' }
+          New-Item -ItemType Directory -Path .release -Force | Out-Null
+          Set-Content -LiteralPath .release/signing-key.private.pem -Value $env:ORBIT_RELEASE_PRIVATE_KEY -NoNewline
+      - name: Build, test and sign portable ZIP
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: ./scripts/package.ps1 -RequireSignature
+      - name: Exercise real updater and rollback
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: ./scripts/test-updater.ps1
+      - name: Publish release automatically
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORBIT_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $version = $env:ORBIT_VERSION
+          gh release create "v$version" "dist/Orbit-$version-win-x64.zip" "dist/Orbit-$version-win-x64.zip.sha256" dist/orbit-update.json dist/orbit-update.json.sig --latest --title "Orbit $version" --notes-file "docs/RELEASE-$version.md" --target $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Release creation failed; do not overwrite existing release assets' }

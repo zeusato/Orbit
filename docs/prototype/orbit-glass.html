@@ -1,0 +1,277 @@
+<div id="orbit-concept">
+  <div class="viz-carousel" aria-label="Hai phương án menu Orbit" data-previous-label="Phương án trước" data-next-label="Phương án sau">
+    <section data-variant="Vòng phân đoạn" aria-label="Menu vòng phân đoạn"><div class="orbit-ui" data-layout="ring"></div></section>
+    <section data-variant="Ô kính nổi" aria-label="Menu ô kính nổi" hidden><div class="orbit-ui" data-layout="tiles"></div></section>
+  </div>
+</div>
+<style>
+#orbit-concept { width:100%; }
+#orbit-concept .orbit-ui { --o-accent:#167d72; --o-bright:#90eee0; --o-ink:light-dark(#193a42,#edf5f6); --o-muted:light-dark(#4a666c,#adc1c6); --o-glass:light-dark(rgba(240,250,250,.72),rgba(22,44,53,.78)); --o-solid:light-dark(#edf5f4,#213740); --o-subtle:light-dark(rgba(255,255,255,.46),rgba(255,255,255,.055)); --o-edge:light-dark(rgba(255,255,255,.94),rgba(218,245,246,.21)); --o-line:light-dark(rgba(42,80,87,.15),rgba(206,231,234,.13)); --o-shadow:0 22px 70px rgba(5,25,33,.25),inset 0 1px 0 rgba(255,255,255,.18); --o-radius:24px; --o-blur:26px; color:var(--o-ink); font:14px/1.45 'Segoe UI Variable','Segoe UI',sans-serif; width:100%; min-width:0; }
+#orbit-concept .orbit-ui * { box-sizing:border-box; }
+#orbit-concept .orbit-ui [hidden] { display:none!important; }
+#orbit-concept .orbit-ui button,#orbit-concept .orbit-ui input,#orbit-concept .orbit-ui select { font:inherit; }
+#orbit-concept .orbit-ui button { cursor:pointer; color:inherit; }
+#orbit-concept .orbit-ui button:disabled { cursor:default; opacity:.5; }
+#orbit-concept .orbit-ui button:focus-visible,#orbit-concept .orbit-ui input:focus-visible,#orbit-concept .orbit-ui select:focus-visible { outline:3px solid var(--o-accent); outline-offset:3px; }
+#orbit-concept .orbit-ui svg { width:19px; height:19px; flex:none; stroke-width:1.65; }
+#orbit-concept .desktop { border-radius:28px; position:relative; overflow:hidden; background:radial-gradient(ellipse at 85% 0%,light-dark(#d8d3c3,#5b6461),transparent 50%),radial-gradient(ellipse at 12% 95%,light-dark(#8baeb1,#1b5159),transparent 60%),light-dark(#a9c5c8,#183941); isolation:isolate; }
+#orbit-concept .desktop:before { content:'';position:absolute;width:95%;height:440px;left:20%;top:145px;border-radius:50%;transform:rotate(-27deg);background:linear-gradient(120deg,light-dark(#e6efdc,#75a9a0),light-dark(#6e9ba4,#224b60) 65%);box-shadow:inset 0 14px 18px rgba(255,255,255,.17),0 30px 80px rgba(9,38,46,.3);z-index:-2; }
+#orbit-concept .desktop:after { content:'';position:absolute;width:110%;height:480px;left:24%;top:290px;border-radius:50%;transform:rotate(-25deg);background:linear-gradient(115deg,light-dark(#8bb5b3,#427e81),light-dark(#426d7d,#152e40) 70%);box-shadow:inset 0 6px 9px rgba(255,255,255,.12);z-index:-1; }
+#orbit-concept .preview-bar { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid var(--o-edge);background:var(--o-glass);backdrop-filter:blur(var(--o-blur)); }
+#orbit-concept .brand { display:flex;align-items:center;gap:11px;min-width:0; }
+#orbit-concept .logo { width:31px;height:31px;border:1px solid var(--o-ink);border-radius:50%;position:relative;transform:rotate(-25deg); }
+#orbit-concept .logo:before { content:'';position:absolute;inset:7px -4px;border:1px solid var(--o-ink);border-radius:50%; }
+#orbit-concept .brand-name { font-size:19px;letter-spacing:3px;font-weight:600; }
+#orbit-concept .brand-sub { font-size:11px;color:var(--o-muted);letter-spacing:.25px; }
+#orbit-concept .top-actions { display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end; }
+#orbit-concept .icon-btn { display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:1px solid transparent;border-radius:12px;padding:9px 11px;font-size:12px;min-height:38px; }
+#orbit-concept .icon-btn:hover,#orbit-concept .icon-btn[aria-pressed="true"] { background:var(--o-subtle);border-color:var(--o-edge); }
+#orbit-concept .work-area { position:relative;min-height:590px;padding:24px;display:flex;justify-content:center;align-items:center; }
+#orbit-concept .desktop-files { position:absolute;left:30px;top:30px;display:flex;flex-direction:column;gap:26px;align-items:center; }
+#orbit-concept .desktop-file { display:flex;flex-direction:column;gap:8px;align-items:center;padding:8px;border:1px solid transparent;background:none;border-radius:12px;font-size:11px;text-shadow:0 1px 3px var(--o-solid); }
+#orbit-concept .desktop-file:first-child { background:var(--o-subtle);border-color:var(--o-edge); }
+#orbit-concept .desktop-file svg { width:34px;height:34px; }
+#orbit-concept .file-thumb { width:43px;height:53px;border-radius:5px;background:linear-gradient(145deg,#e4e4cc,#abc6aa);position:relative;box-shadow:0 5px 14px rgba(0,0,0,.14);overflow:hidden; }
+#orbit-concept .file-thumb:after { content:'';position:absolute;width:14px;height:30px;left:15px;top:14px;background:linear-gradient(90deg,#a8bfb4,#e8eee3 50%,#a3b8ac);border-radius:5px 5px 4px 4px;box-shadow:0 -6px 0 -3px #436158; }
+#orbit-concept .radial-view { width:min(100%,440px);position:relative;text-align:center;z-index:2;padding:0 10px; }
+#orbit-concept .file-tag { display:inline-flex;gap:8px;align-items:center;font-size:12px;padding:7px 12px;background:var(--o-glass);border:1px solid var(--o-edge);border-radius:30px;backdrop-filter:blur(var(--o-blur));margin-bottom:15px; }
+#orbit-concept .file-tag span { color:var(--o-muted); }
+#orbit-concept .radial { width:100%;aspect-ratio:1;position:relative;filter:drop-shadow(0 16px 32px rgba(9,28,35,.22)); }
+#orbit-concept .radial:before { content:'';position:absolute;inset:5%;border-radius:50%;border:1px solid var(--o-edge);pointer-events:none; }
+#orbit-concept .wedge { position:absolute;inset:0;width:100%;height:100%;border:0;background:linear-gradient(135deg,light-dark(rgba(255,255,255,.53),rgba(226,247,248,.16)),transparent),var(--o-glass);backdrop-filter:blur(var(--o-blur)) saturate(1.15);padding:0;transition:background .14s; }
+#orbit-concept .wedge:hover,#orbit-concept .wedge.selected { background:linear-gradient(135deg,rgba(255,255,255,.24),transparent),var(--o-accent);color:#fff; }
+#orbit-concept .wedge:focus-visible { background:var(--o-accent);color:#fff; }
+#orbit-concept .wedge-label { position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:82px;font-size:13px;font-weight:500;pointer-events:none; }
+#orbit-concept .wedge-label svg { width:25px;height:25px; }
+#orbit-concept .wedge-label small { font-size:10px;opacity:.75;font-weight:400;margin-top:-5px; }
+#orbit-concept .radial-hub { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30%;aspect-ratio:1;border-radius:50%;border:1px solid var(--o-edge);background:var(--o-glass);backdrop-filter:blur(var(--o-blur));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;touch-action:none;cursor:grab!important;box-shadow:inset 0 1px 4px rgba(255,255,255,.17); }
+#orbit-concept .radial-hub:active { cursor:grabbing!important; }
+#orbit-concept .radial-hub .file-thumb { width:29px;height:36px; }
+#orbit-concept .radial-hub .file-thumb:after { width:10px;height:22px;left:10px;top:10px; }
+#orbit-concept .radial-hub span { font-size:11px; }
+#orbit-concept .radial-hub small { font-size:10px;color:var(--o-muted); }
+#orbit-concept .radial-hint { margin-top:13px;min-height:42px;display:flex;flex-direction:column;gap:4px; }
+#orbit-concept .radial-hint strong { font-weight:500;font-size:14px; }
+#orbit-concept .radial-hint span { font-size:12px;color:var(--o-muted); }
+#orbit-concept .orbit-ui[data-layout="tiles"] .radial:before { inset:16%;border-style:dashed;opacity:.6; }
+#orbit-concept .orbit-ui[data-layout="tiles"] .wedge { width:25%;height:21%;inset:auto;transform:translate(-50%,-50%);clip-path:none!important;border:1px solid var(--o-edge);border-radius:18px;box-shadow:0 9px 21px rgba(8,30,40,.12); }
+#orbit-concept .orbit-ui[data-layout="tiles"] .wedge-label { left:50%!important;top:50%!important;gap:5px; }
+#orbit-concept .orbit-ui[data-layout="tiles"] .wedge-label small { display:none; }
+#orbit-concept .glass-window { width:min(100%,800px);border-radius:var(--o-radius);background:var(--o-glass);backdrop-filter:blur(var(--o-blur)) saturate(1.2);border:1px solid var(--o-edge);box-shadow:var(--o-shadow);z-index:3;overflow:hidden; }
+#orbit-concept .window-head { padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--o-line); }
+#orbit-concept .window-title { display:flex;align-items:center;gap:10px; }
+#orbit-concept .window-title strong { font-weight:600;font-size:15px; }
+#orbit-concept .window-title small { display:block;color:var(--o-muted);font-size:11px;margin-top:2px; }
+#orbit-concept .window-body { display:grid;grid-template-columns:minmax(0,1fr) 236px;min-height:350px; }
+#orbit-concept .image-workspace { padding:20px;display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0; }
+#orbit-concept .image-canvas { position:relative;width:min(100%,280px);aspect-ratio:4/5;align-self:center;border-radius:14px;overflow:hidden;background-color:#d6dcda;background-image:linear-gradient(45deg,#bac4c1 25%,transparent 25%),linear-gradient(-45deg,#bac4c1 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#bac4c1 75%),linear-gradient(-45deg,transparent 75%,#bac4c1 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0; }
+#orbit-concept .photo-bg { position:absolute;inset:0;background:radial-gradient(ellipse at 80% 18%,#f1e8ca 0,transparent 58%),linear-gradient(135deg,#b6c8af,#799f91); }
+#orbit-concept .photo-bg:after { content:'';position:absolute;width:90%;height:70%;bottom:-28%;left:-20%;border-radius:50%;background:linear-gradient(110deg,#d4dcc2,#9daf9a);transform:rotate(-13deg);box-shadow:0 -8px 26px rgba(239,237,210,.3); }
+#orbit-concept .photo-subject { position:absolute;inset:0;transform:scale(var(--zoom,1));pointer-events:none; }
+#orbit-concept .bottle-shadow { position:absolute;width:35%;height:8%;background:rgba(21,50,38,.27);filter:blur(10px);border-radius:50%;left:34%;bottom:12%;transform:rotate(-10deg); }
+#orbit-concept .bottle { position:absolute;width:27%;height:62%;left:37%;top:24%;border-radius:25% 25% 14% 14% / 12% 12% 7% 7%;background:linear-gradient(90deg,#96b7a6,#d4e2d7 18%,#e7eee2 35%,#bdcfbd 69%,#8eaf9d);box-shadow:inset 3px 0 6px rgba(245,255,243,.6),8px 9px 20px rgba(40,67,46,.15);color:#36554b; }
+#orbit-concept .bottle:before { content:'';position:absolute;left:27%;width:47%;height:12%;top:-11%;background:linear-gradient(90deg,#6c887b,#9eb6a4,#526f63);border-radius:4px 4px 0 0; }
+#orbit-concept .bottle:after { content:'';position:absolute;left:28%;width:72%;height:6%;top:-17%;background:linear-gradient(#658476,#36574a);border-radius:4px 7px 0 0; }
+#orbit-concept .bottle-label { position:absolute;top:29%;width:100%;text-align:center; }
+#orbit-concept .bottle-label b { font:500 19px/1.2 Georgia,serif;letter-spacing:2px; }
+#orbit-concept .bottle-label span { display:block;font-size:7px;letter-spacing:1.7px;margin-top:9px; }
+#orbit-concept .bottle-label em { display:block;font-size:8px;font-style:normal;letter-spacing:.5px;margin-top:30px; }
+#orbit-concept .crop-box { position:absolute;left:14%;top:11%;width:72%;height:78%;border:1.5px solid #fff;box-shadow:0 0 0 700px rgba(8,25,26,.28);touch-action:none;cursor:move; }
+#orbit-concept .crop-box:before,#orbit-concept .crop-box:after { content:'';position:absolute;inset:33.333% 0;border-top:1px solid rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.45);pointer-events:none; }
+#orbit-concept .crop-box:after { inset:0 33.333%;border:0;border-left:1px solid rgba(255,255,255,.45);border-right:1px solid rgba(255,255,255,.45); }
+#orbit-concept .crop-corner { position:absolute;width:9px;height:9px;border:2px solid #fff;background:#23796e; }
+#orbit-concept .crop-corner:nth-child(1){left:-5px;top:-5px}#orbit-concept .crop-corner:nth-child(2){right:-5px;top:-5px}#orbit-concept .crop-corner:nth-child(3){left:-5px;bottom:-5px}#orbit-concept .crop-corner:nth-child(4){right:-5px;bottom:-5px}
+#orbit-concept .image-meta { display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--o-muted); }
+#orbit-concept .settings-side { padding:21px 19px;border-left:1px solid var(--o-line);background:var(--o-subtle);display:flex;flex-direction:column;gap:20px; }
+#orbit-concept .control-group { display:flex;flex-direction:column;gap:9px; }
+#orbit-concept .control-label { font-size:12px;font-weight:500;display:flex;justify-content:space-between;gap:7px;align-items:center; }
+#orbit-concept .muted { color:var(--o-muted);font-size:12px; }
+#orbit-concept .segmented { display:flex;gap:5px;flex-wrap:wrap; }
+#orbit-concept .chip { padding:7px 10px;border:1px solid var(--o-line);background:var(--o-subtle);border-radius:9px;font-size:12px;min-height:33px; }
+#orbit-concept .chip[aria-pressed="true"] { background:var(--o-accent);color:#fff;border-color:var(--o-accent); }
+#orbit-concept .field { width:100%;min-width:0;background:var(--o-subtle);border:1px solid var(--o-line);border-radius:9px;color:var(--o-ink);padding:9px 10px; }
+#orbit-concept select.field option { background:var(--o-solid);color:var(--o-ink); }
+#orbit-concept .range { width:100%;accent-color:var(--o-accent); }
+#orbit-concept .check-row { display:flex;align-items:center;gap:8px;font-size:12px; }
+#orbit-concept input[type="checkbox"] { accent-color:var(--o-accent);width:16px;height:16px; }
+#orbit-concept .window-foot { display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 20px;border-top:1px solid var(--o-line); }
+#orbit-concept .foot-path { font-size:11px;color:var(--o-muted);min-width:0;overflow-wrap:anywhere; }
+#orbit-concept .foot-path b { display:block;font-weight:500;color:var(--o-ink);font-size:12px; }
+#orbit-concept .button-row { display:flex;gap:8px;flex-shrink:0; }
+#orbit-concept .action-btn { padding:9px 15px;border-radius:11px;background:var(--o-subtle);border:1px solid var(--o-line);font-size:12px;white-space:nowrap;min-height:37px; }
+#orbit-concept .action-btn.primary { background:var(--o-accent);border-color:transparent;color:#fff;box-shadow:0 5px 12px rgba(22,125,114,.16); }
+#orbit-concept .action-btn:hover { filter:brightness(1.08); }
+#orbit-concept .bg-original { z-index:1;clip-path:inset(0 50% 0 0);pointer-events:none; }
+#orbit-concept .compare-line { position:absolute;left:50%;top:0;bottom:0;z-index:2;border-left:2px solid #fff;pointer-events:none; }
+#orbit-concept .compare-line:after { content:'↔';position:absolute;top:45%;left:-15px;background:#fff;color:#224e46;width:28px;height:28px;text-align:center;border-radius:50%;line-height:28px;box-shadow:0 2px 8px #3458; }
+#orbit-concept .compare-labels { position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;z-index:3;pointer-events:none; }
+#orbit-concept .compare-labels span { font-size:10px;background:rgba(26,49,43,.7);color:#fff;padding:4px 7px;border-radius:6px; }
+#orbit-concept .swatch { width:34px;height:34px;border-radius:50%;border:1px solid var(--o-line);position:relative; }
+#orbit-concept .swatch[aria-pressed="true"]:after { content:'✓';position:absolute;inset:5px;border-radius:50%;background:#1c4c43;color:#fff;font-size:13px;display:grid;place-items:center; }
+#orbit-concept .small-window { max-width:570px; }
+#orbit-concept .list-body { padding:7px 20px 18px;min-height:250px; }
+#orbit-concept .list-row { display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 0;border-bottom:1px solid var(--o-line); }
+#orbit-concept .list-row:last-child { border-bottom:0; }
+#orbit-concept .row-copy { min-width:0; }
+#orbit-concept .row-copy strong { display:block;font-size:13px;font-weight:500;overflow-wrap:anywhere; }
+#orbit-concept .row-copy small { display:block;font-size:11px;color:var(--o-muted);margin-top:4px; }
+#orbit-concept .setting-row .field { max-width:175px; }
+#orbit-concept .switch { appearance:none;width:35px!important;height:21px!important;background:var(--o-line);border:1px solid var(--o-line);border-radius:20px;position:relative;flex:none;cursor:pointer; }
+#orbit-concept .switch:after { content:'';position:absolute;width:15px;height:15px;background:var(--o-ink);border-radius:50%;top:2px;left:2px;transition:transform .15s; }
+#orbit-concept .switch:checked { background:var(--o-accent);border-color:var(--o-accent); }
+#orbit-concept .switch:checked:after { background:white;transform:translateX(14px); }
+#orbit-concept .empty-state { min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--o-muted);text-align:center;font-size:13px; }
+#orbit-concept .empty-state svg { width:34px;height:34px; }
+#orbit-concept .job-icon { width:36px;height:36px;border-radius:10px;background:var(--o-subtle);display:grid;place-items:center;flex:none; }
+#orbit-concept .job-main { display:flex;align-items:center;gap:12px;min-width:0; }
+#orbit-concept .job-status { font-size:11px;color:var(--o-accent);white-space:nowrap; }
+#orbit-concept .toast { position:relative;z-index:4;max-width:480px;margin:0 auto 16px;padding:13px 15px;background:var(--o-glass);backdrop-filter:blur(var(--o-blur));border:1px solid var(--o-edge);border-radius:16px;box-shadow:var(--o-shadow);display:flex;align-items:center;gap:12px; }
+#orbit-concept .toast-copy { flex:1;min-width:0; }
+#orbit-concept .toast-copy strong { font-size:12px;display:block;font-weight:500;overflow-wrap:anywhere; }
+#orbit-concept .toast-copy span { color:var(--o-muted);font-size:11px; }
+#orbit-concept .taskbar { padding:11px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--o-edge);background:var(--o-glass);backdrop-filter:blur(var(--o-blur));font-size:11px; }
+#orbit-concept .taskbar-note { display:flex;align-items:center;gap:7px;color:var(--o-muted); }
+#orbit-concept .status-dot { width:6px;height:6px;border-radius:50%;background:var(--o-accent); }
+#orbit-concept .taskbar kbd { font:11px 'Segoe UI',sans-serif;border:1px solid var(--o-line);border-radius:4px;padding:2px 5px; }
+#orbit-concept .taskbar-right { display:flex;gap:9px;align-items:center; }
+#orbit-concept .drag-ghost { position:absolute;pointer-events:none;z-index:9;transform:translate(-50%,-50%) rotate(-7deg);filter:drop-shadow(0 8px 12px #1235); }
+#orbit-concept .idle-panel { text-align:center;display:flex;align-items:center;flex-direction:column;gap:14px;background:var(--o-glass);border:1px solid var(--o-edge);padding:30px;border-radius:24px;backdrop-filter:blur(var(--o-blur)); }
+#orbit-concept .progress-track { height:3px;background:var(--o-subtle);border-radius:5px;overflow:hidden;margin-top:8px; }
+#orbit-concept .progress-fill { height:100%;width:0;background:var(--o-accent);transition:width .2s; }
+#orbit-concept .orbit-ui[data-solid="true"] { --o-glass:var(--o-solid);--o-blur:0px!important; }
+#orbit-concept .orbit-ui[data-motion="false"] *,#orbit-concept .orbit-ui[data-motion="false"] *:after { transition:none!important; }
+@media (max-width:760px) {
+  #orbit-concept .desktop-files { display:none; }
+  #orbit-concept .work-area { padding:20px; }
+  #orbit-concept .window-body { grid-template-columns:minmax(0,1fr) 210px; }
+  #orbit-concept .settings-side { padding:16px; }
+  #orbit-concept .brand-sub { display:none; }
+}
+@media (max-width:560px) {
+  #orbit-concept .preview-bar { padding:14px 12px;gap:6px; }
+  #orbit-concept .brand { gap:7px; }
+  #orbit-concept .brand-name { font-size:14px;letter-spacing:1px; }
+  #orbit-concept .logo { width:25px;height:25px; }
+  #orbit-concept .icon-btn { padding:8px;min-height:40px; }
+  #orbit-concept .top-actions .icon-btn { flex-direction:column;gap:2px;font-size:10px; }
+  #orbit-concept .top-actions .icon-btn svg { width:16px;height:16px; }
+  #orbit-concept .work-area { padding:16px 10px;min-height:720px; }
+  #orbit-concept .radial-view { padding:0; }
+  #orbit-concept .wedge-label { width:65px;font-size:11px;gap:5px; }
+  #orbit-concept .wedge-label small { display:none; }
+  #orbit-concept .wedge-label svg { width:21px;height:21px; }
+  #orbit-concept .radial-hub small { display:none; }
+  #orbit-concept .radial-hub span { font-size:10px; }
+  #orbit-concept .window-body { grid-template-columns:1fr; }
+  #orbit-concept .settings-side { border-left:0;border-top:1px solid var(--o-line);display:grid;grid-template-columns:1fr 1fr;gap:15px; }
+  #orbit-concept .image-canvas { width:min(100%,240px); }
+  #orbit-concept .image-workspace { padding:13px; }
+  #orbit-concept .window-head { padding:12px; }
+  #orbit-concept .window-foot { align-items:flex-start;flex-direction:column;padding:13px;gap:10px; }
+  #orbit-concept .button-row { width:100%;justify-content:flex-end; }
+  #orbit-concept .taskbar { padding:10px 12px; }
+  #orbit-concept .taskbar-note { font-size:10px; }
+  #orbit-concept .taskbar-right kbd { display:none; }
+  #orbit-concept .list-body { padding:5px 13px 12px; }
+  #orbit-concept .setting-row { flex-wrap:wrap; }
+  #orbit-concept .toast { margin:0 10px 13px; }
+}
+@media (prefers-reduced-motion:reduce) { #orbit-concept .orbit-ui *,#orbit-concept .orbit-ui *:after { transition:none!important; } }
+</style>
+<script>
+(() => {
+  const root=document.getElementById('orbit-concept');
+  const icons={png:'image',webp:'file-image',resize:'scaling',crop:'crop',background:'wand-sparkles',compress:'minimize-2'};
+  const actions=[{id:'png',label:'PNG',sub:'Không mất dữ liệu',hint:'Tạo bản sao PNG',detail:'Giữ file gốc · Lưu cùng thư mục'},{id:'webp',label:'WebP',sub:'Ảnh cho web',hint:'Chuyển sang WebP',detail:'Chất lượng 85% · Lưu cùng thư mục'},{id:'resize',label:'Resize',sub:'Đổi kích thước',hint:'Thay đổi kích thước',detail:'Chọn preset hoặc nhập kích thước'},{id:'crop',label:'Crop',sub:'Cắt khung hình',hint:'Cắt khung hình',detail:'Mở trình chỉnh sửa · Lưu thành bản sao'},{id:'background',label:'Xóa nền',sub:'Tách chủ thể',hint:'Xóa hoặc thay nền',detail:'Xem trước · PNG trong suốt hoặc nền màu'},{id:'compress',label:'Nén ảnh',sub:'Giảm dung lượng',hint:'Giảm dung lượng JPEG',detail:'Điều chỉnh chất lượng trước khi lưu'}];
+  const icon=(name)=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
+  const photo=()=>`<div class="photo-bg"></div><div class="photo-subject"><div class="bottle-shadow"></div><div class="bottle"><div class="bottle-label"><b>FORMA</b><span>BOTANICAL CARE</span><em>DAILY WASH<br>250 ml</em></div></div></div>`;
+  const esc=(s)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const initIcons=()=>{if(globalThis.lucide)lucide.createIcons({attrs:{width:19,height:19}});};
+  const saved=window.openai?.widgetState;
+  const controllers=[];
+  root.querySelectorAll('.orbit-ui').forEach((ui,index)=>{
+    const state={screen:'menu',tool:'crop',jobs:[],ratio:'4:5',zoom:1,bg:'transparent',compare:50,quality:85,width:1200,height:1500,locked:true,shortcut:'Ctrl + Space',theme:'system',glass:true,motion:true};
+    const remembered=saved?.privateContent?.variants?.[index];
+    if(remembered){for(const key of ['shortcut','theme','glass','motion'])if(remembered[key]!==undefined)state[key]=remembered[key];}
+    ui.innerHTML=`<div class="desktop"><div class="preview-bar"><div class="brand"><span class="logo" aria-hidden="true"></span><div><div class="brand-name">ORBIT</div><div class="brand-sub">FILE TOOLS · BẢN MẪU</div></div></div><nav class="top-actions" aria-label="Cửa sổ Orbit"><button type="button" class="icon-btn" data-screen="menu">${icon('circle-dot')}<span>Menu</span></button><button type="button" class="icon-btn" data-screen="jobs">${icon('list-checks')}<span>Tác vụ</span></button><button type="button" class="icon-btn" data-screen="settings">${icon('settings-2')}<span>Cài đặt</span></button></nav></div><div class="work-area"><div class="desktop-files"><button type="button" class="desktop-file" data-screen="menu" aria-label="Thử menu với product.jpg"><span class="file-thumb"></span><span>product.jpg</span></button><div class="desktop-file">${icon('folder')}<span>Hình sản phẩm</span></div></div><div class="radial-view" data-view="menu"><div class="file-tag">${icon('image')}<b>product.jpg</b><span>2400 × 3000</span></div><div class="radial" aria-label="Menu xử lý ảnh"><button type="button" class="radial-hub" aria-label="Kéo ảnh mẫu đến một công cụ"><span class="file-thumb"></span><span>product.jpg</span><small>Kéo để chọn</small></button></div><div class="radial-hint"><strong>Chọn công cụ cho ảnh</strong><span>Thả vào một ô để thực hiện · Esc để hủy</span></div></div><div class="glass-window" data-view="editor" hidden></div><div class="glass-window small-window" data-view="jobs" hidden></div><div class="glass-window small-window" data-view="settings" hidden></div><div class="idle-panel" data-view="idle" hidden>${icon('circle-check')}<span>Orbit sẵn sàng</span><button class="action-btn primary" type="button" data-screen="menu">Thử lại với product.jpg</button></div><div class="drag-ghost" hidden><div class="file-thumb"></div></div></div><div class="toast" role="status" aria-live="polite" hidden></div><div class="taskbar"><div class="taskbar-note"><span class="status-dot"></span><span>Bản mẫu · Không thay đổi file thật</span></div><div class="taskbar-right"><kbd data-shortcut>Ctrl + Space</kbd><span>Orbit</span></div></div></div>`;
+    const radial=ui.querySelector('.radial'),hint=ui.querySelector('.radial-hint'),editor=ui.querySelector('[data-view="editor"]');
+    const polar=(r,angle)=>{const a=angle*Math.PI/180;return [50+r*Math.cos(a),50+r*Math.sin(a)];};
+    actions.forEach((action,i)=>{
+      const center=-90+i*60,points=[];
+      for(let a=center-28.7;a<=center+28.71;a+=2.05)points.push(polar(45,a));
+      for(let a=center+28.7;a>=center-28.71;a-=2.05)points.push(polar(17.3,a));
+      const pos=polar(32.5,center),tile=polar(34.7,center),button=document.createElement('button');
+      button.type='button';button.className='wedge';button.dataset.action=action.id;button.setAttribute('aria-label',action.hint);button.style.clipPath=`polygon(${points.map(p=>p.map(v=>v.toFixed(2)+'%').join(' ')).join(',')})`;
+      if(ui.dataset.layout==='tiles'){button.style.left=tile[0]+'%';button.style.top=tile[1]+'%';}
+      button.innerHTML=`<span class="wedge-label" style="left:${pos[0]}%;top:${pos[1]}%">${icon(icons[action.id])}<span>${action.label}</span><small>${action.sub}</small></span>`;
+      button.addEventListener('pointerenter',()=>setSelection(action.id));
+      button.addEventListener('pointerleave',()=>{if(!dragging)setSelection(null);});
+      button.addEventListener('focus',()=>setSelection(action.id));
+      button.addEventListener('click',()=>runAction(action.id));
+      radial.insertBefore(button,radial.firstChild);
+    });
+    let selected=null,dragging=false;
+    function setSelection(id){selected=id;radial.querySelectorAll('.wedge').forEach(b=>b.classList.toggle('selected',b.dataset.action===id));const a=actions.find(x=>x.id===id);hint.querySelector('strong').textContent=a?a.hint:'Chọn công cụ cho ảnh';hint.querySelector('span').textContent=a?a.detail:'Thả vào một ô để thực hiện · Esc để hủy';}
+    function save(){const variants=controllers.map(c=>({shortcut:c.state.shortcut,theme:c.state.theme,glass:c.state.glass,motion:c.state.motion}));window.openai?.setWidgetState?.({modelContent:{design:'Orbit glassmorphism',layout:ui.dataset.layout,screen:state.screen,tool:state.tool},privateContent:{variants}})?.catch(()=>{});}
+    function applySettings(){ui.style.colorScheme=state.theme==='system'?'light dark':state.theme;ui.dataset.solid=String(!state.glass);ui.dataset.motion=String(state.motion);ui.querySelector('[data-shortcut]').textContent=state.shortcut;}
+    function screen(name,persist=true){state.screen=name;ui.querySelectorAll('[data-view]').forEach(v=>v.hidden=v.dataset.view!==name);ui.querySelectorAll('.top-actions [data-screen]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.screen===name)));if(name==='menu')setSelection(null);if(name==='jobs')renderJobs();if(name==='settings')renderSettings();initIcons();if(persist){ui.querySelector(`[data-view="${name}"] button`)?.focus({preventScroll:true});save();}}
+    function footer(label,output){return `<div class="window-foot"><div class="foot-path"><b>${output}</b>Cùng thư mục · Giữ file gốc</div><div class="button-row"><button class="action-btn" type="button" data-close>Hủy</button><button class="action-btn primary" type="button" data-save>${label}</button></div></div>`;}
+    function title(label,sub,ico){return `<div class="window-head"><div class="window-title">${icon(ico)}<div><strong>${label}</strong><small>${sub}</small></div></div><button type="button" class="icon-btn" data-close aria-label="Đóng cửa sổ">${icon('x')}</button></div>`;}
+    function runAction(id){state.tool=id;if(id==='png'||id==='webp'){screen('idle');addJob(id==='png'?'Chuyển thành PNG':'Chuyển thành WebP','product.'+id);return;}renderEditor(id);screen('editor');}
+    function renderEditor(id){
+      let side='',content=photo(),label='',output='';
+      if(id==='crop'){
+        label='Cắt khung hình';output='product_crop.jpg';content+=`<div class="crop-box" aria-label="Khung cắt có thể kéo; dùng phím mũi tên trong ô Dịch khung"><i class="crop-corner"></i><i class="crop-corner"></i><i class="crop-corner"></i><i class="crop-corner"></i></div>`;
+        side=`<div class="control-group"><span class="control-label">Tỷ lệ khung</span><div class="segmented">${['Tự do','1:1','4:5','16:9'].map(r=>`<button type="button" class="chip" data-ratio="${r}" aria-pressed="${r===state.ratio}">${r}</button>`).join('')}</div></div><div class="control-group"><label class="control-label">Thu phóng <output data-zoom-value>${Math.round(state.zoom*100)}%</output><input hidden aria-hidden="true"></label><input class="range" type="range" aria-label="Thu phóng ảnh" min="100" max="180" value="${state.zoom*100}" data-zoom></div><div class="control-group"><span class="control-label">Dịch khung</span><div class="segmented">${[['left','arrow-left','Trái'],['up','arrow-up','Lên'],['down','arrow-down','Xuống'],['right','arrow-right','Phải']].map(([d,i,l])=>`<button class="chip" type="button" data-nudge="${d}" aria-label="Dịch khung sang ${l}">${icon(i)}</button>`).join('')}</div></div><div class="control-group"><span class="control-label">Kích thước đầu ra</span><span class="muted" data-crop-output>1728 × 2340 px</span></div>`;
+      }else if(id==='background'){
+        label='Xóa & thay nền';output='product_nobg.png';content=`<div class="bg-result" style="position:absolute;inset:0"></div>${photo().replace('<div class="photo-bg"></div>','')}<div class="bg-original" style="position:absolute;inset:0">${photo()}</div><div class="compare-line"></div><div class="compare-labels"><span>Ảnh gốc</span><span>Kết quả mẫu</span></div>`;
+        side=`<div class="control-group"><span class="control-label">Nền đầu ra</span><div class="segmented"><button type="button" class="chip" data-bg="transparent" aria-pressed="${state.bg==='transparent'}">Trong suốt</button><button type="button" class="chip" data-bg="#e8e2d4" aria-pressed="${state.bg!=='transparent'}">Màu nền</button></div></div><div class="control-group"><span class="control-label">Màu có sẵn</span><div class="segmented">${[['#e8e2d4','Cát'],['#ffffff','Trắng'],['#2e4d47','Xanh rêu'],['#c7d3ea','Xanh nhạt']].map(([c,l])=>`<button class="swatch" type="button" data-bg="${c}" style="background:${c}" aria-label="Nền ${l}" aria-pressed="${state.bg===c}"></button>`).join('')}</div></div><div class="control-group"><label class="control-label">So sánh trước / sau</label><input class="range" type="range" aria-label="Tỷ lệ xem ảnh gốc" min="0" max="100" value="${state.compare}" data-compare></div><div class="control-group"><span class="control-label">Định dạng</span><span class="muted">PNG · Giữ kênh trong suốt</span></div>`;
+      }else if(id==='resize'){
+        label='Thay đổi kích thước';output='product_resized.jpg';side=`<div class="control-group"><span class="control-label">Cạnh dài</span><div class="segmented">${[1080,1920,2560].map(n=>`<button class="chip" type="button" data-preset="${n}" aria-pressed="false">${n}</button>`).join('')}</div></div><div class="control-group"><label class="control-label">Rộng (px)<input class="field" type="number" min="1" max="12000" data-width aria-label="Chiều rộng" value="${state.width}"></label><label class="control-label">Cao (px)<input class="field" type="number" min="1" max="12000" data-height aria-label="Chiều cao" value="${state.height}"></label></div><label class="check-row"><input type="checkbox" data-lock ${state.locked?'checked':''}>Giữ tỷ lệ gốc</label><span class="muted" data-resize-output>${state.width} × ${state.height} px</span>`;
+      }else{
+        label='Giảm dung lượng';output='product_small.jpg';side=`<div class="control-group"><label class="control-label">Chất lượng JPEG <output data-quality-value>${state.quality}%</output></label><input class="range" type="range" aria-label="Chất lượng JPEG" min="30" max="95" value="${state.quality}" data-quality></div><div class="control-group"><span class="control-label">Độ phân giải</span><span class="muted">2400 × 3000 px · Giữ nguyên</span></div><div class="control-group"><span class="control-label">Dung lượng</span><span class="muted">Được xác định sau khi mã hóa</span></div>`;
+      }
+      editor.innerHTML=title(label,'product.jpg · 2400 × 3000 px',icons[id])+`<div class="window-body"><div class="image-workspace"><div class="image-canvas" role="img" aria-label="Ảnh sản phẩm mẫu: chai FORMA trên nền xanh">${content}</div><div class="image-meta"><span>Ảnh minh họa</span><span>${id==='crop'?'Kéo khung để đặt vùng cắt':id==='background'?'Kéo thanh so sánh':'Xem trước'}</span></div></div><div class="settings-side">${side}</div></div>`+footer('Lưu bản sao',output);
+      editor.querySelector('[data-save]').onclick=()=>{if(id==='resize'&&(!Number.isFinite(state.width)||!Number.isFinite(state.height)||state.width<1||state.height<1||state.width>12000||state.height>12000)){editor.querySelector('[data-width]').reportValidity();editor.querySelector('[data-height]').reportValidity();return;}screen('idle');addJob(label,output);};
+      if(id==='crop')bindCrop();if(id==='background')bindBackground();if(id==='resize')bindResize();
+      if(id==='compress')editor.querySelector('[data-quality]').oninput=e=>{state.quality=Number(e.target.value);editor.querySelector('[data-quality-value]').textContent=state.quality+'%';};
+      initIcons();
+    }
+    function bindCrop(){
+      const canvas=editor.querySelector('.image-canvas'),box=editor.querySelector('.crop-box');let frame={x:.14,y:.11,w:.72,h:.78},pointer=null;
+      function draw(){box.style.left=frame.x*100+'%';box.style.top=frame.y*100+'%';box.style.width=frame.w*100+'%';box.style.height=frame.h*100+'%';editor.querySelector('[data-crop-output]').textContent=`${Math.round(2400*frame.w)} × ${Math.round(3000*frame.h)} px`;}
+      function ratio(r){state.ratio=r;const p=r.split(':').map(Number),v=r==='Tự do'?1:p[0]/p[1];frame.w=.72;frame.h=r==='Tự do'?.78:frame.w*2400/(3000*v);if(frame.h>.86){frame.h=.86;frame.w=frame.h*3000*v/2400;}frame.x=(1-frame.w)/2;frame.y=(1-frame.h)/2;draw();editor.querySelectorAll('[data-ratio]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ratio===r)));}
+      function move(x,y){frame.x=Math.max(0,Math.min(1-frame.w,x));frame.y=Math.max(0,Math.min(1-frame.h,y));draw();}
+      box.onpointerdown=e=>{pointer={x:e.clientX,y:e.clientY,fx:frame.x,fy:frame.y};box.setPointerCapture(e.pointerId);e.preventDefault();};
+      box.onpointermove=e=>{if(!pointer)return;const b=canvas.getBoundingClientRect();move(pointer.fx+(e.clientX-pointer.x)/b.width,pointer.fy+(e.clientY-pointer.y)/b.height);};
+      box.onpointerup=()=>{pointer=null;};box.onpointercancel=()=>{pointer=null;};
+      editor.querySelectorAll('[data-ratio]').forEach(b=>b.onclick=()=>ratio(b.dataset.ratio));
+      editor.querySelectorAll('[data-nudge]').forEach(b=>b.onclick=()=>{const d=b.dataset.nudge;move(frame.x+(d==='left'?-.02:d==='right'?.02:0),frame.y+(d==='up'?-.02:d==='down'?.02:0));});
+      editor.querySelector('[data-zoom]').oninput=e=>{state.zoom=Number(e.target.value)/100;canvas.style.setProperty('--zoom',state.zoom);editor.querySelector('[data-zoom-value]').textContent=e.target.value+'%';};
+      canvas.style.setProperty('--zoom',state.zoom);ratio(state.ratio);
+    }
+    function bindBackground(){function draw(){editor.querySelector('.bg-result').style.background=state.bg==='transparent'?'transparent':state.bg;editor.querySelector('.bg-original').style.clipPath=`inset(0 ${100-state.compare}% 0 0)`;editor.querySelector('.compare-line').style.left=state.compare+'%';editor.querySelectorAll('[data-bg]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.bg===state.bg)));}editor.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{state.bg=b.dataset.bg;draw();});editor.querySelector('[data-compare]').oninput=e=>{state.compare=Number(e.target.value);draw();};draw();}
+    function bindResize(){function draw(){editor.querySelector('[data-width]').value=state.width;editor.querySelector('[data-height]').value=state.height;editor.querySelector('[data-resize-output]').textContent=state.width+' × '+state.height+' px';}editor.querySelector('[data-width]').oninput=e=>{state.width=Math.round(Number(e.target.value));if(state.locked)state.height=Math.round(state.width*1.25);draw();};editor.querySelector('[data-height]').oninput=e=>{state.height=Math.round(Number(e.target.value));if(state.locked)state.width=Math.round(state.height*.8);draw();};editor.querySelector('[data-lock]').onchange=e=>{state.locked=e.target.checked;if(state.locked){state.height=Math.round(state.width*1.25);draw();}};editor.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{state.height=Number(b.dataset.preset);state.width=Math.round(state.height*.8);state.locked=true;editor.querySelector('[data-lock]').checked=true;draw();editor.querySelectorAll('[data-preset]').forEach(p=>p.setAttribute('aria-pressed',String(p===b)));});}
+    function addJob(label,filename){
+      const original=filename;let n=0;while(state.jobs.some(j=>j.filename===filename&&j.status!=='cancelled')){n++;filename=original.replace(/(\.[^.]+)$/,` (${n})$1`);}
+      const job={id:Date.now()+Math.random(),label,filename,status:'running',progress:0};state.jobs.unshift(job);renderToast(job);let elapsed=0;
+      job.timer=setInterval(()=>{elapsed+=160;job.progress=Math.min(100,Math.round(elapsed/11.2));if(job.status==='cancelled'){clearInterval(job.timer);return;}if(job.progress>=100){job.status='done';clearInterval(job.timer);renderToast(job);}else{const bar=ui.querySelector('.toast .progress-fill');if(bar)bar.style.width=job.progress+'%';}if(state.screen==='jobs')renderJobs();},160);
+    }
+    function renderToast(job){const t=ui.querySelector('.toast');t.hidden=false;const done=job.status==='done',cancel=job.status==='cancelled';t.innerHTML=`${icon(cancel?'circle-x':done?'circle-check':'loader-circle')}<div class="toast-copy"><strong>${cancel?'Đã hủy':done?'Đã tạo kết quả mẫu':'Đang mô phỏng xử lý'}</strong><span>${esc(job.filename)}${done?' · File gốc được giữ lại':''}</span>${!done&&!cancel?`<div class="progress-track"><div class="progress-fill" style="width:${job.progress}%"></div></div>`:''}</div><button type="button" class="action-btn" data-toast-action>${!done&&!cancel?'Hủy':'Tác vụ'}</button><button type="button" class="icon-btn" data-toast-close aria-label="Ẩn thông báo">${icon('x')}</button>`;t.querySelector('[data-toast-action]').onclick=()=>{if(job.status==='running'){job.status='cancelled';clearInterval(job.timer);renderToast(job);if(state.screen==='jobs')renderJobs();}else screen('jobs');};t.querySelector('[data-toast-close]').onclick=()=>{t.hidden=true;};initIcons();}
+    function renderJobs(){const v=ui.querySelector('[data-view="jobs"]');v.innerHTML=title('Tác vụ gần đây','Lịch sử trong bản mẫu · Chỉ mô phỏng','list-checks')+`<div class="list-body">${state.jobs.length?state.jobs.map(j=>`<div class="list-row"><div class="job-main"><span class="job-icon">${icon(j.status==='done'?'file-check':j.status==='cancelled'?'file-x':'file-clock')}</span><div class="row-copy"><strong>${esc(j.filename)}</strong><small>${esc(j.label)} · Cùng thư mục nguồn</small></div></div><span class="job-status">${j.status==='done'?'Hoàn tất':j.status==='cancelled'?'Đã hủy':j.progress+'%'}</span></div>`).join(''):`<div class="empty-state">${icon('layers-2')}<span>Chưa có tác vụ.<br>Chọn một công cụ trong menu để thử.</span><button type="button" class="action-btn" data-screen="menu">Mở menu tròn</button></div>`}</div>`;initIcons();}
+    function renderSettings(){const v=ui.querySelector('[data-view="settings"]');v.innerHTML=title('Cài đặt Orbit','Tùy chỉnh trải nghiệm','settings-2')+`<div class="list-body"><div class="list-row setting-row"><div class="row-copy"><strong>Phím gọi menu</strong><small>Khi đang kéo file</small></div><select class="field" aria-label="Phím gọi menu" data-setting="shortcut">${['Ctrl + Space','Ctrl + Shift + Space'].map(s=>`<option ${state.shortcut===s?'selected':''}>${s}</option>`).join('')}</select></div><div class="list-row setting-row"><div class="row-copy"><strong>Giao diện</strong><small>Sáng, tối hoặc theo hệ thống</small></div><select class="field" aria-label="Giao diện" data-setting="theme">${[['system','Theo hệ thống'],['light','Sáng'],['dark','Tối']].map(([v,l])=>`<option value="${v}" ${state.theme===v?'selected':''}>${l}</option>`).join('')}</select></div><label class="list-row"><div class="row-copy"><strong>Hiệu ứng kính mờ</strong><small>Tắt để dùng nền đặc, rõ chữ</small></div><input class="switch" type="checkbox" data-setting="glass" ${state.glass?'checked':''}></label><label class="list-row"><div class="row-copy"><strong>Chuyển động nhẹ</strong><small>Hiệu ứng khi chọn công cụ</small></div><input class="switch" type="checkbox" data-setting="motion" ${state.motion?'checked':''}></label><div class="list-row"><div class="row-copy"><strong>Lưu cạnh file nguồn</strong><small>Giữ bản gốc · Tự thêm số khi trùng tên</small></div>${icon('folder-check')}</div></div>`;v.querySelectorAll('[data-setting]').forEach(el=>el.onchange=()=>{state[el.dataset.setting]=el.type==='checkbox'?el.checked:el.value;applySettings();save();});}
+    ui.addEventListener('click',e=>{const nav=e.target.closest('[data-screen]'),close=e.target.closest('[data-close]');if(nav)screen(nav.dataset.screen);if(close)screen('menu');});
+    ui.addEventListener('keydown',e=>{if(e.key==='Escape'){dragging=false;ui.querySelector('.drag-ghost').hidden=true;screen('idle');ui.querySelector('[data-screen="menu"]').focus();}});
+    const hub=ui.querySelector('.radial-hub'),ghost=ui.querySelector('.drag-ghost'),area=ui.querySelector('.work-area');
+    hub.addEventListener('pointerdown',e=>{if(e.button!==0)return;dragging=true;setSelection(null);hub.setPointerCapture(e.pointerId);ghost.hidden=false;moveGhost(e);e.preventDefault();});
+    function moveGhost(e){const a=area.getBoundingClientRect();ghost.style.left=e.clientX-a.left+'px';ghost.style.top=e.clientY-a.top+'px';}
+    hub.addEventListener('pointermove',e=>{if(!dragging)return;moveGhost(e);const r=radial.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,dist=Math.hypot(dx,dy)/r.width;let hit=null;if(ui.dataset.layout==='tiles'){radial.querySelectorAll('.wedge').forEach(b=>{const q=b.getBoundingClientRect();if(e.clientX>=q.left&&e.clientX<=q.right&&e.clientY>=q.top&&e.clientY<=q.bottom)hit=b.dataset.action;});}else if(dist>.173&&dist<.45){const angle=((Math.atan2(dy,dx)*180/Math.PI+90)+360)%360;const index=Math.round(angle/60)%6;if(Math.abs(((angle-index*60+540)%360)-180)<28.7)hit=actions[index].id;}setSelection(hit);});
+    hub.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;ghost.hidden=true;const id=selected;setSelection(null);if(id)runAction(id);});
+    hub.addEventListener('pointercancel',()=>{dragging=false;ghost.hidden=true;setSelection(null);});
+    controllers.push({state,applySettings});applySettings();screen('menu',false);
+    if(globalThis.Tweak){const style={blur:26,radius:24,accent:'#167d72'};const tweak=new Tweak({container:ui,onChange:()=>{ui.style.setProperty('--o-blur',style.blur+'px');ui.style.setProperty('--o-radius',style.radius+'px');ui.style.setProperty('--o-accent',style.accent);}});tweak.addSlider(style,'blur',{label:'Độ mờ kính',min:0,max:40,unit:'px'});tweak.addSlider(style,'radius',{label:'Bo góc cửa sổ',min:12,max:32,unit:'px'});tweak.addColorPicker(style,'accent',{label:'Màu nhấn',reference:'--o-accent'});}
+  });
+  window.addEventListener('openai:set_globals',event=>{const variants=event.detail?.globals?.widgetState?.privateContent?.variants;if(!variants)return;controllers.forEach((c,i)=>{if(variants[i]){for(const key of ['shortcut','theme','glass','motion'])if(variants[i][key]!==undefined)c.state[key]=variants[i][key];c.applySettings();}});});
+  initIcons();
+})();
+</script>

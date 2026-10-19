@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+.vs/
+.dotnet/
+.nuget/
+artifacts/
+dist/
+*.user
+*.suo
+.release/
+*.private.pem
+assets/tessdata/*.traineddata
+.codex/
+.agents/
