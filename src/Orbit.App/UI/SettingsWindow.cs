@@ -12,6 +12,8 @@ public sealed class SettingsWindow : GlassWindow
         var hotkey = new ComboBox { ItemsSource = choices.Select(MenuHotkeys.Label).ToArray(), SelectedIndex = Array.IndexOf(choices, app.Settings.EffectiveHotkey) };
         System.Windows.Automation.AutomationProperties.SetName(hotkey, "Phím gọi menu khi đang kéo");
         stack.Children.Add(Ui.Text("Phím gọi menu khi đang kéo", 14)); hotkey.Margin = new Thickness(0, 7, 0, 18); stack.Children.Add(hotkey);
+        var quickHint = Ui.Text("Không kéo file: Ctrl + Space mở vòng tiện ích.", 12, true);
+        quickHint.Margin = new Thickness(0, 0, 0, 12); stack.Children.Add(quickHint);
         var theme = new ComboBox { ItemsSource = new[] { "Theo hệ thống", "Sáng", "Tối" }, SelectedIndex = app.Settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 } };
         stack.Children.Add(Ui.Text("Giao diện", 14)); theme.Margin = new Thickness(0, 7, 0, 14); stack.Children.Add(theme);
 

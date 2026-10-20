@@ -19,10 +19,27 @@ Helper 0.4.x (chạy trên .NET 8 của máy) vẫn là helper áp dụng bản 
 
 ## Phát hành
 
-1. Tăng Version trong `src/Orbit.App/Orbit.App.csproj` và `src/Orbit.Updater/Orbit.Updater.csproj`, rồi viết `docs/RELEASE-X.Y.Z.md`.
-2. Commit và push lên `main`. Workflow `.github/workflows/release.yml` tự build/test/ký, kiểm thử helper và rollback, tạo tag `vX.Y.Z`, publish stable release và đánh dấu Latest. Không cần bấm Run workflow hay Publish. Phiên bản đã có release sẽ được bỏ qua; muốn phát hành thay đổi mới phải tăng phiên bản.
-3. Release tự đính kèm `Orbit-X.Y.Z-win-x64.zip`, file `.zip.sha256`, `orbit-update.json`, `orbit-update.json.sig`. ZIP source code GitHub tự tạo không dùng để cập nhật. Client sẽ nhận bản mới ở lần kiểm tra tiếp theo.
-4. Có thể kiểm tra cục bộ trước khi push: `./scripts/package.ps1 -RequireSignature` và `./scripts/test-updater.ps1`. Script chạy tiến trình probe 0.0.1 → 0.0.2 cho các kịch bản success/rollback/recover, không mở UI hoặc thay app đang dùng. Không có khóa ký thì dùng `-RecoverOnly`. `package.ps1` cũng tự chép helper ra thư mục riêng và chạy thử khi DOTNET_ROOT trỏ sai, để chắc helper không phụ thuộc .NET cài sẵn. Workflow còn hỗ trợ push tag `v*` và chạy thủ công khi cần chạy lại một lần phát hành thất bại. Lỗi build/test/ký sẽ chặn phát hành.
+Luồng đã chọn: **một lệnh chuẩn bị release → commit/push → GitHub tự phát hành**. Không cần Codex, SDK hay khóa ký trên máy chạy lệnh chuẩn bị; cần Git và PowerShell 7. Workflow dùng SDK từ `global.json` và khóa ký lưu trong GitHub secret.
+
+1. Hoàn thành phần code muốn phát hành. Chạy từ thư mục repository:
+
+   ```powershell
+   .\scripts\prepare-release.ps1 -Bump patch -Notes "Sửa lỗi xuất PDF", "Bổ sung tiện ích QR"
+   ```
+
+   `patch`: 0.5.0 → 0.5.1; `minor`: 0.5.0 → 0.6.0; `major`: 0.5.0 → 1.0.0. Có thể dùng `-Version 0.6.0` thay cho `-Bump`; bỏ cả hai mặc định tăng patch. Thêm `-WhatIf` để xem version dự kiến mà không ghi file.
+
+   Nếu code đã commit hết, chạy `.\scripts\prepare-release.ps1 -Bump patch` để tự lấy nội dung các commit sau tag của bản hiện tại làm notes. Chưa có tag ở máy thì `git fetch --tags`. Có thay đổi chưa commit thì phải truyền `-Notes`, tránh notes tự động bỏ sót phần code chưa có trong lịch sử.
+
+2. Lệnh cập nhật đồng thời `Version` trong App và Updater, tiêu đề/link tải/link ghi chú trong README, rồi tạo `docs/RELEASE-X.Y.Z.md`. Xem `git diff` và đọc file notes mới (file chưa được Git theo dõi không hiện trong diff mặc định); sửa nội dung nếu cần. Lệnh từ chối version không hợp lệ, giảm version, tag/file notes trùng, version app/updater lệch hoặc tiêu đề README sai; không tự commit, push hay tạo tag.
+3. Commit toàn bộ code cần phát hành cùng những file lệnh vừa tạo/sửa, rồi `git push origin main`. Mỗi push lên nhánh và PR vào `main` đều chạy kiểm tra script release, chuẩn bị OCR, build và bộ test ứng dụng. Chỉ `main` hoặc tag `vX.Y.Z` có thể phát hành sau khi các kiểm tra đạt. Version đã có release thì bỏ qua đóng gói/phát hành; build/test vẫn chạy. PR và nhánh tính năng chỉ kiểm tra.
+4. Với version mới, workflow xác nhận release notes và version, đóng gói self-contained, ký, kiểm thử helper thật (success/rollback/recover), tạo tag `vX.Y.Z`, publish stable release và đánh dấu Latest. Release đính kèm `Orbit-X.Y.Z-win-x64.zip`, `.zip.sha256`, `orbit-update.json`, `orbit-update.json.sig`. ZIP source code GitHub tự tạo không dùng để cập nhật. Client nhận bản mới ở lần kiểm tra tiếp theo.
+
+Lần đầu áp dụng quy trình này, cần commit/push các script và workflow mới lên repository. Chỉ push code mà giữ version đã phát hành sẽ không ra bản mới. Các release được chạy lần lượt; workflow chặn version/tag lệch và chặn phát hành bản cũ hơn stable mới nhất.
+
+Nếu thất bại, vào **GitHub → Actions → Build, test and release**, mở bước lỗi. Build/test/ký/updater lỗi đều chặn publish. Khi có log kiểm thử, workflow giữ artifact chẩn đoán 7 ngày. Sửa code thì commit/push lại; lỗi mạng hoặc hạ tầng nhất thời có thể bấm **Re-run failed jobs**, hoặc **Run workflow** trên `main`. Nếu lần tạo release lỗi để lại draft cùng version, kiểm tra draft trong Releases, xóa draft chưa hoàn chỉnh rồi chạy lại; workflow không ghi đè asset. Release đã public giữ nguyên, sửa tiếp bằng version mới.
+
+Có thể kiểm tra cục bộ với `./scripts/test-release.ps1`, `./scripts/build.ps1 -Test`, `./scripts/package.ps1 -RequireSignature` và `./scripts/test-updater.ps1`. Lệnh package thay bản đóng gói trong `dist/Orbit` và yêu cầu đóng app đang chạy từ đó. Bộ test updater chạy tiến trình probe 0.0.1 → 0.0.2 cho success/rollback/recover, không mở UI hoặc thay app đang dùng; không có khóa ký thì dùng `-RecoverOnly`. Package còn chép helper ra thư mục riêng và chạy khi DOTNET_ROOT trỏ sai để kiểm tra runtime đi kèm. Các kiểm tra tự động không thay thế nghiệm thu giao diện và file thực tế.
 
 Private key cục bộ: `.release/signing-key.private.pem` (đã gitignore). Public key: `assets/update-public-key.pem` (được commit và nhúng). GitHub Actions dùng repository secret `ORBIT_RELEASE_PRIVATE_KEY`; nội dung là private PEM, không phải GitHub token. Sao lưu private key ở nơi riêng an toàn; mất khóa sẽ không thể ký bản cập nhật mà client cũ chấp nhận. Không tự tạo lại hoặc đổi public key khi phát hành thông thường. Script package kiểm tra khóa ký khớp public key trước khi bàn giao.
 

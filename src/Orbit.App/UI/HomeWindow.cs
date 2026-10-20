@@ -11,6 +11,8 @@ public sealed class HomeWindow : GlassWindow
     private readonly TextBlock _instruction;
     private readonly TextBlock _status = Ui.Text("Sẵn sàng", 12, true);
     private bool _exit;
+    private bool _pasting;
+    public bool IsPasting => _pasting;
     public HomeWindow(OrbitApplication app) : base(app, "ORBIT", 900, 680)
     {
         var body = new Grid { Margin = new Thickness(24, 0, 24, 12) };
@@ -23,7 +25,12 @@ public sealed class HomeWindow : GlassWindow
         var dropContent = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var dropTitle = Ui.Text("Thả file vào đây", 20); dropTitle.TextAlignment = TextAlignment.Center; dropContent.Children.Add(dropTitle);
         var types = Ui.Text("Ảnh · HEIC · PDF · Office · Video · Âm thanh", 12, true); types.TextAlignment = TextAlignment.Center; types.Margin = new Thickness(0, 6, 0, 12); dropContent.Children.Add(types);
-        var pick = Ui.Button("Chọn file…", PickFiles, true); pick.HorizontalAlignment = HorizontalAlignment.Center; dropContent.Children.Add(pick);
+        var pick = Ui.Button("Chọn file…", PickFiles, true);
+        var inputButtons = Ui.Row(pick, Ui.Button("Dán ảnh · Ctrl+V", PasteClipboard), Ui.Button("Tiện ích…", app.ShowQuickTools));
+        inputButtons.HorizontalAlignment = HorizontalAlignment.Center; dropContent.Children.Add(inputButtons);
+        var utilitiesHint = Ui.Text("Tiện ích: QR / Barcode · Ảnh ↔ Base64 · Văn bản / JSON", 12, true);
+        utilitiesHint.TextAlignment = TextAlignment.Center; utilitiesHint.Margin = new Thickness(0, 10, 0, 0); dropContent.Children.Add(utilitiesHint);
+        PreviewKeyDown += (_, e) => { if (ClipboardImages.IsPaste(e)) { e.Handled = true; PasteClipboard(); } };
         var dropZone = Ui.Panel(dropContent, 20); dropZone.AllowDrop = true;
         void ResetDrop()
         { dropZone.SetResourceReference(Border.BorderBrushProperty, "Line"); dropZone.SetResourceReference(Border.BackgroundProperty, "PanelFill"); dropTitle.Text = "Thả file vào đây"; }
@@ -63,8 +70,28 @@ public sealed class HomeWindow : GlassWindow
         app.Queue.Finished += JobFinished;
         Closed += (_, _) => app.Queue.Finished -= JobFinished;
     }
-    public void UpdateInstruction() => _instruction.Text = $"Kéo file trong Explorer → bấm {Orbit.Settings.HotkeyLabel} → thả vào một công cụ.";
+    public void UpdateInstruction() => _instruction.Text = $"Kéo file → bấm {Orbit.Settings.HotkeyLabel} → thả vào công cụ.\nKhông kéo file: Ctrl + Space mở vòng tiện ích tại con trỏ.";
     public void SetStatus(string message) => _status.Text = message;
+    private async void PasteClipboard()
+    {
+        if (_pasting || Orbit.UpdateInProgress) return;
+        try { await PasteImageAsync(ClipboardImages.Read()); }
+        catch (Exception error) { _status.Text = "Không dán được ảnh: " + error.Message; }
+    }
+    public async Task PasteImageAsync(BitmapSource image)
+    {
+        if (_pasting || Orbit.UpdateInProgress) return;
+        _pasting = true;
+        try
+        {
+            _status.Text = "Đang nhận ảnh…";
+            var snapshot = image.Clone(); snapshot.Freeze();
+            var source = await Task.Run(() => ClipboardImages.Save(snapshot));
+            _status.Text = "Đã nhận ảnh · chọn công cụ để xử lý.";
+            OpenMenu([source]);
+        }
+        finally { _pasting = false; }
+    }
     private void JobFinished(ImageJob job) => _status.Text = job.Status;
     public void ExitWindow() { _exit = true; Close(); }
     private static bool IsValidDrop(DragEventArgs e)

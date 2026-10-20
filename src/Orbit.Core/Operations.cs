@@ -6,21 +6,26 @@ using System.Collections.Generic;
 namespace Orbit.Core;
 
 public enum ToolKind { Png, Jpeg, Webp, Bmp, Tiff, Gif, Ico, Resize, Crop, Rotate, Compress, ImagePdf, PdfPng, PdfJpeg, PdfSplit, PdfMerge, OfficePdf, DocxText, Zip, Sha256, More, PdfWord, PdfText, ImageText, Frame,
-    VideoMp4, VideoCompress, AudioMp3, AudioM4a, AudioWav, MediaTrim, VideoFrame, VideoGif, AudioMerge }
+    VideoMp4, VideoCompress, AudioMp3, AudioM4a, AudioWav, MediaTrim, VideoFrame, VideoGif, AudioMerge, PdfCompress,
+    QuickQr, QuickReadCode, QuickImageBase64, QuickTextEncoding, QuickJson, QuickCleanText }
 public enum JobState { Queued, Running, Completed, Cancelled, Failed }
 public sealed record CropRegion(int X, int Y, int Width, int Height);
 public sealed record ImageRequest(string Source, ToolKind Tool, int Width = 0, int Height = 0,
     bool KeepAspect = true, int Quality = 85, CropRegion? Crop = null, string[]? Sources = null, FrameOptions? Frame = null, MediaOptions? Media = null,
-    string? OutputDirectory = null);
+    string? OutputDirectory = null, PdfOptions? Pdf = null, string? OutputStem = null);
 
 public static class ToolCatalog
 {
+    public static readonly ToolKind[] QuickTools = [ToolKind.QuickQr, ToolKind.QuickReadCode, ToolKind.QuickImageBase64,
+        ToolKind.QuickTextEncoding, ToolKind.QuickJson, ToolKind.QuickCleanText];
     public static readonly ToolKind[] Order = [ToolKind.Png, ToolKind.Jpeg, ToolKind.Resize, ToolKind.Crop, ToolKind.Rotate, ToolKind.Compress];
     public static string Label(ToolKind tool) => tool switch
     {
+        ToolKind.QuickQr => "Tạo QR", ToolKind.QuickReadCode => "Đọc mã", ToolKind.QuickImageBase64 => "Ảnh Base64",
+        ToolKind.QuickTextEncoding => "Base64 / URL", ToolKind.QuickJson => "JSON", ToolKind.QuickCleanText => "Dọn văn bản",
         ToolKind.Png or ToolKind.PdfPng => "PNG", ToolKind.Jpeg or ToolKind.PdfJpeg => "JPEG", ToolKind.Webp => "WebP",
         ToolKind.Bmp => "BMP", ToolKind.Tiff => "TIFF", ToolKind.Gif => "GIF", ToolKind.Ico => "ICO",
-        ToolKind.ImagePdf or ToolKind.OfficePdf => "PDF", ToolKind.PdfSplit => "Tách trang", ToolKind.PdfMerge => "Ghép PDF",
+        ToolKind.ImagePdf or ToolKind.OfficePdf => "PDF", ToolKind.PdfSplit => "Tách trang", ToolKind.PdfMerge => "Ghép PDF", ToolKind.PdfCompress => "Nén PDF",
         ToolKind.PdfWord => "Word", ToolKind.PdfText => "Lấy chữ", ToolKind.ImageText => "OCR → TXT",
         ToolKind.DocxText => "Lấy văn bản", ToolKind.Zip => "Tạo ZIP", ToolKind.Sha256 => "SHA-256", ToolKind.More => "Thêm…",
         ToolKind.Resize => "Resize", ToolKind.Crop => "Crop", ToolKind.Rotate => "Xoay 90°", ToolKind.Frame => "Khung nền",
@@ -29,12 +34,15 @@ public static class ToolCatalog
     };
     public static string Description(ToolKind tool) => tool switch
     {
+        ToolKind.QuickQr => "Tạo QR từ link hoặc văn bản", ToolKind.QuickReadCode => "Đọc QR và barcode từ ảnh",
+        ToolKind.QuickImageBase64 => "Chuyển ảnh thành Base64 và ngược lại", ToolKind.QuickTextEncoding => "Mã hóa văn bản Base64 hoặc URL",
+        ToolKind.QuickJson => "Định dạng và thu gọn JSON", ToolKind.QuickCleanText => "Dọn văn bản",
         ToolKind.Png => "Chuyển thành PNG", ToolKind.Jpeg => "Chuyển thành JPEG",
         ToolKind.Webp => "Chuyển thành WebP lossless", ToolKind.Bmp => "Chuyển thành BMP", ToolKind.Tiff => "Chuyển thành TIFF",
         ToolKind.Gif => "Chuyển thành GIF tĩnh (256 màu)", ToolKind.Ico => "Tạo icon ICO (tối đa 256 px)",
         ToolKind.ImagePdf => "Chuyển ảnh thành PDF", ToolKind.PdfPng => "Xuất tất cả trang PDF thành PNG",
-        ToolKind.PdfJpeg => "Xuất tất cả trang PDF thành JPEG", ToolKind.PdfSplit => "Tách mỗi trang thành một PDF",
-        ToolKind.PdfMerge => "Ghép PDF theo thứ tự tên file", ToolKind.OfficePdf => "Xuất PDF bằng Microsoft Office",
+        ToolKind.PdfJpeg => "Xuất tất cả trang PDF thành JPEG", ToolKind.PdfSplit => "Chọn trang PDF để tách",
+        ToolKind.PdfMerge => "Ghép PDF và ảnh theo thứ tự tùy chọn", ToolKind.PdfCompress => "Giảm dung lượng ảnh trong PDF, giữ lớp chữ", ToolKind.OfficePdf => "Xuất PDF bằng Microsoft Office",
         ToolKind.DocxText => "Trích văn bản DOCX thành TXT", ToolKind.Zip => "Tạo bản nén ZIP", ToolKind.Sha256 => "Lưu mã kiểm tra SHA-256",
         ToolKind.More => "Trang công cụ tiếp theo",
         ToolKind.PdfWord => "PDF có chữ → DOCX sửa được; giữ dòng/trang cơ bản, không phục dựng bảng và hình",
@@ -93,7 +101,13 @@ public static class ToolCatalog
         {
             if (pdfTextOnly) tools.Add(ToolKind.PdfWord);
             tools.Add(ToolKind.PdfText);
-            tools.AddRange([ToolKind.PdfPng, ToolKind.PdfJpeg, ToolKind.PdfSplit]); if (kinds.Count > 1) tools.Add(ToolKind.PdfMerge);
+            tools.AddRange([ToolKind.PdfPng, ToolKind.PdfJpeg]);
+            if (kinds.Count == 1) { tools.Add(ToolKind.PdfSplit); tools.Add(ToolKind.PdfCompress); }
+            tools.Add(ToolKind.PdfMerge);
+        }
+        else if (kinds.All(k => k == FileKind.Pdf || FileTypes.IsImage(k)))
+        {
+            tools.Add(ToolKind.PdfMerge);
         }
         else if (kinds.All(FileTypes.IsOffice))
         {
@@ -108,7 +122,7 @@ public static class ToolCatalog
         var pages = (tools.Count + 4) / 5;
         return tools.Skip((page % pages) * 5).Take(5).Append(ToolKind.More).ToArray();
     }
-    public static bool SupportsCount(ToolKind tool, int count) => count > 0 && (tool is not (ToolKind.Crop or ToolKind.MediaTrim or ToolKind.VideoFrame or ToolKind.VideoGif) || count == 1) && (tool != ToolKind.AudioMerge || count >= 2);
+    public static bool SupportsCount(ToolKind tool, int count) => count > 0 && (tool is not (ToolKind.Crop or ToolKind.PdfSplit or ToolKind.PdfCompress or ToolKind.MediaTrim or ToolKind.VideoFrame or ToolKind.VideoGif) || count == 1) && (tool != ToolKind.AudioMerge || count >= 2);
     public static bool IsMediaTool(ToolKind tool) => tool is >= ToolKind.VideoMp4 and <= ToolKind.AudioMerge;
     public static (string Stem, string Extension) OutputName(ImageRequest request)
     {
@@ -119,6 +133,8 @@ public static class ToolCatalog
             ToolKind.Webp => (stem, ".webp"), ToolKind.Bmp => (stem, ".bmp"), ToolKind.Tiff => (stem, ".tiff"),
             ToolKind.Gif => (stem, ".gif"), ToolKind.Ico => (stem, ".ico"),
             ToolKind.ImagePdf or ToolKind.OfficePdf => (stem, ".pdf"), ToolKind.PdfMerge => (stem + "_merged", ".pdf"),
+            ToolKind.PdfSplit => (stem + "_pages", ".pdf"),
+            ToolKind.PdfCompress => (stem + "_small", ".pdf"),
             ToolKind.DocxText => (stem, ".txt"), ToolKind.Zip => (stem, ".zip"), ToolKind.Sha256 => (stem, ".sha256"),
             ToolKind.PdfWord => (stem, ".docx"), ToolKind.PdfText or ToolKind.ImageText => (stem + "_text", ".txt"),
             ToolKind.Compress => (stem + "_small", ".jpg"),

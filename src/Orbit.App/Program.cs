@@ -51,7 +51,7 @@ public sealed class OrbitApplication : Application
     public RadialWindow Menu { get; private set; } = null!;
     public UpdateService Updates { get; private set; } = null!;
     public bool UpdateInProgress { get; set; }
-    public bool IsIdleForUpdate(bool manual) => !Queue.HasPending && !_openingEditor && !Menu.IsVisible &&
+    public bool IsIdleForUpdate(bool manual) => !Queue.HasPending && !_openingEditor && _home?.IsPasting != true && !Menu.IsVisible &&
         (Native.GetAsyncKeyState(1) & 0x8000) == 0 &&
         !Windows.Cast<Window>().Any(w => w.IsVisible && (!manual || w is not (HomeWindow or SettingsWindow or UpdateWindow)));
 
@@ -62,7 +62,7 @@ public sealed class OrbitApplication : Application
         base.OnStartup(e); Theme.Apply(Settings); Theme.InstallStyles();
         // Diagnostic and test sessions keep no history on disk.
         var history = _args.Contains("--no-integrations") || _args.Contains("--render-previews") ? null : Path.Combine(AppSettings.DataDirectory, "history.json");
-        Queue = new JobQueue(Dispatcher, history) { OutputFor = source => Settings.OutputMode == OutputLocation.Beside ? null : OutputLocation.For(source, Settings.OutputMode, Settings.OutputFolder) }; Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
+        Queue = new JobQueue(Dispatcher, history) { OutputFor = source => ClipboardImages.OutputDirectory(source, Settings) }; Menu = new RadialWindow(this); Updates = new UpdateService(this); _home = new HomeWindow(this);
         MainWindow = _home;
         // Progress for long jobs in the notification corner; hidden while the main window is in front.
         if (!_args.Contains("--render-previews"))
@@ -79,6 +79,7 @@ public sealed class OrbitApplication : Application
         _tray = new Forms.NotifyIcon { Icon = _icon, Text = "Orbit · Công cụ xử lý file", Visible = true };
         var context = new Forms.ContextMenuStrip();
         context.Items.Add("Mở Orbit", null, (_, _) => Dispatcher.BeginInvoke(ShowHome));
+        context.Items.Add("Tiện ích · QR, Base64, văn bản", null, (_, _) => Dispatcher.BeginInvoke(ShowQuickTools));
         context.Items.Add("Cài đặt", null, (_, _) => Dispatcher.BeginInvoke(() => new SettingsWindow(this).ShowDialog()));
         context.Items.Add("Cập nhật Orbit", null, (_, _) => Dispatcher.BeginInvoke(() => new UpdateWindow(this).Show()));
         context.Items.Add(new Forms.ToolStripSeparator());
@@ -96,6 +97,7 @@ public sealed class OrbitApplication : Application
         {
             _hotkey = new DragHotkey(() => Settings.EffectiveHotkey);
             _hotkey.Requested += cursor => Dispatcher.BeginInvoke(DispatcherPriority.Input, () => { if (!UpdateInProgress) Menu.ShowMenu(cursor); });
+            _hotkey.QuickRequested += cursor => Dispatcher.BeginInvoke(DispatcherPriority.Input, () => ToggleQuickMenu(cursor));
             _hotkey.Cancelled += () => Dispatcher.BeginInvoke(DispatcherPriority.Input, () => { if (Menu.IsVisible) Menu.HideMenu(); });
             _hotkey.Released += () => Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
             {
@@ -224,6 +226,21 @@ public sealed class OrbitApplication : Application
     }
 
     public void ShowHome() { if (_home == null) return; _home.Show(); if (_home.WindowState == WindowState.Minimized) _home.WindowState = WindowState.Normal; _home.Activate(); }
+    public void ShowQuickTools()
+        => ShowQuickTools(null);
+    public void ToggleQuickMenu(Native.Point cursor)
+    {
+        if (UpdateInProgress) return;
+        if (Menu.IsVisible && Menu.QuickMode) Menu.HideMenu();
+        else Menu.ShowQuickMenu(cursor);
+    }
+    private void ShowQuickTools(int? index)
+    {
+        if (UpdateInProgress) { _home?.SetStatus("Đang cập nhật. Hãy thử lại sau."); return; }
+        var window = Windows.OfType<QuickToolsWindow>().FirstOrDefault() ?? new QuickToolsWindow(this);
+        if (index.HasValue) window.SelectTool(index.Value);
+        window.Show(); if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal; window.Activate();
+    }
     public void RefreshTheme()
     {
         Theme.Apply(Settings); Menu.RefreshBackdrop();
@@ -236,9 +253,17 @@ public sealed class OrbitApplication : Application
     public async void RunTool(ToolKind tool, string[] files)
     {
         if (UpdateInProgress) { _home?.SetStatus("Đang chuẩn bị cập nhật. Hãy thử lại sau."); return; }
+        var quickIndex = Array.IndexOf(ToolCatalog.QuickTools, tool);
+        if (quickIndex >= 0) { ShowQuickTools(quickIndex); return; }
         if (files.Length == 0 || files.Length > 128) return;
         if (tool == ToolKind.More) return;
-        if (tool is ToolKind.PdfMerge or ToolKind.AudioMerge)
+        if (tool == ToolKind.ImagePdf)
+        { new ImagePdfChoiceWindow(this, files).Show(); return; }
+        if (tool is ToolKind.PdfMerge or ToolKind.PdfSplit)
+        { new PdfEditorWindow(this, tool, files).Show(); return; }
+        if (tool == ToolKind.PdfCompress)
+        { if (files.Length == 1) new PdfCompressionWindow(this, files[0]).Show(); return; }
+        if (tool == ToolKind.AudioMerge)
         { Queue.Add([new ImageRequest(files[0], tool, Sources: files)]); return; }
         if (tool is ToolKind.VideoCompress or ToolKind.MediaTrim or ToolKind.VideoFrame or ToolKind.VideoGif)
         {

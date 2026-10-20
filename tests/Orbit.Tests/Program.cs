@@ -177,6 +177,9 @@ internal static partial class Program
             Throws<ArgumentException>(() => Engine.Execute(new(source, ToolKind.Resize, 32768, 32768), CancellationToken.None));
         });
         CheckExtended(source, args.Contains("--office"));
+        CheckPdfAssembly(source);
+        CheckPdfEnhancements();
+        CheckQuickTools(source);
         CheckFrames(source);
         CheckMedia();
         CheckShell(source);
@@ -202,7 +205,7 @@ internal static partial class Program
             try
             {
                 Check("First-run startup choice persists, can retry errors and respects decline", () => CheckStartupUi(app));
-                Check("Hotkeys require exact modifiers and dragging; legacy preferences migrate", CheckHotkeyRules);
+                Check("Hotkeys separate idle Ctrl+Space from configured drag shortcuts; legacy preferences migrate", CheckHotkeyRules);
                 Check("Settings saves Shift+Space, updates instructions and preserves cancel", () => CheckHotkeySettingsUi(app));
                 await CheckEditors(app);
                 await CheckFrameEditor(app);
@@ -210,6 +213,8 @@ internal static partial class Program
                 await CheckProgressToast(app);
                 await CheckMediaEditor(app);
                 await CheckShellUi(app);
+                await CheckPdfEditors(app);
+                await CheckQuickToolsUi(app);
                 app.Menu.ShowMenu(new Orbit.App.Interop.Native.Point(700, 420), [Path.Combine(_folder, "text-layer.pdf")]);
                 await app.Menu.Detection;
                 Assert(app.Menu.VisibleTools.Contains(ToolKind.PdfWord), "text PDF offers Word in real WPF menu");

@@ -1,14 +1,21 @@
-# Orbit 0.5.0
+# Orbit 0.6.0
 
 Đại ca có thể xử lý ảnh, PDF, tài liệu Office, âm thanh và video tại máy bằng menu tròn. File không được tải lên dịch vụ bên ngoài.
 
 ## Chạy ứng dụng
 
-Yêu cầu Windows 11 x64; từ 0.5.0 bản ZIP đã kèm .NET 10 (self-contained), không cần cài .NET riêng. OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.5.0-win-x64.zip` (khoảng 125 MB). Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
+Yêu cầu Windows 11 x64; từ 0.5.0 bản ZIP đã kèm .NET 10 (self-contained), không cần cài .NET riêng. OCR cần Microsoft Visual C++ Redistributable x64 (2015–2022). Mở `dist/Orbit/Orbit.exe` hoặc `scripts/run.ps1`. Bản ZIP: `dist/Orbit-0.6.0-win-x64.zip` (khoảng 125 MB). Giải nén và giữ nguyên cả thư mục, gồm helper cập nhật, `tessdata` và `x64`; không gửi riêng EXE. Bản 0.3.x cần nâng lên 0.4.0 thủ công một lần.
 
 ## Cập nhật
 
-Tải bản portable tại [GitHub Releases](https://github.com/zeusato/Orbit/releases/latest). Để phát hành bản mới: tăng `Version` trong `src/Orbit.App/Orbit.App.csproj`, thêm `docs/RELEASE-X.Y.Z.md`, commit và push `main`. GitHub Actions tự build/test/ký, tạo tag và publish release; không cần bấm nút. Phiên bản đã phát hành sẽ được bỏ qua, không ghi đè.
+Tải bản portable tại [GitHub Releases](https://github.com/zeusato/Orbit/releases/latest). Mỗi lần push code đều được GitHub Actions build/test. Muốn phát hành, chạy ở thư mục repository bằng PowerShell 7:
+
+```powershell
+.\scripts\prepare-release.ps1 -Bump patch -Notes "Mô tả thay đổi của bản này"
+git diff
+```
+
+Xem diff và file notes mới, commit toàn bộ code cần phát hành cùng các file lệnh vừa sửa/tạo, rồi `git push origin main`. Nếu code đã commit và máy có tag bản hiện tại, có thể bỏ `-Notes` để tự lấy mô tả từ các commit mới. Lệnh tự tăng đồng thời version app/updater, sửa link README và tạo release notes; dùng `-Bump minor` khi cần tăng bản tính năng. Sau push `main`, workflow kiểm tra, đóng gói, ký, kiểm thử updater rồi tạo tag/publish bản mới. Version đã phát hành được bỏ qua, vẫn chạy build/test. Chi tiết và cách chạy lại khi lỗi: [hướng dẫn phát hành](docs/UPDATES.md#phát-hành).
 
 Từ 0.4.0, Orbit mặc định kiểm tra GitHub Releases `zeusato/Orbit` mỗi 12 giờ, tải ZIP mới và tự áp dụng khi ở khay, không có cửa sổ/tác vụ/kéo thả. Cài đặt cho phép tắt; menu khay và Cài đặt có **Cập nhật Orbit** để kiểm tra, áp dụng ngay hoặc hoãn 4 giờ. Gói phải qua kiểm tra chữ ký riêng và SHA-256; helper giữ backup và khôi phục khi bản mới lỗi khởi động. Chưa có certificate Authenticode, Windows vẫn có thể cảnh báo EXE portable. Chi tiết phát hành, cache/backup và giới hạn phục hồi: [UPDATES.md](docs/UPDATES.md).
 
@@ -32,6 +39,23 @@ Cũng có thể chọn file hoặc thả file vào cửa sổ chính rồi bấm
 
 Tác vụ chạy quá 0,7 giây hiện một bảng tiến trình nhỏ ở góc phải dưới màn hình: tên file, phần trăm, số thứ tự trong lượt, nút **Mở Orbit** và **Hủy**. Bảng không lấy focus và ẩn khi cửa sổ Orbit đang ở phía trước; khi xong sẽ hiện thông báo hoàn tất như trước.
 
+## Tiện ích khi không kéo file
+
+Khi Orbit đang chạy ở khay, **Ctrl + Space khi không kéo file** mở vòng sáu tiện ích ngay tại con trỏ. Bấm một ô hoặc phím 1–6 để vào thẳng công cụ, không cần mở Home. Esc, bấm ra ngoài hoặc Ctrl + Space lần nữa đóng vòng; mở vòng chưa đọc clipboard hay xử lý nội dung. Phím khi kéo file vẫn theo Cài đặt; Ctrl + Space cho tiện ích cố định, không nhận thêm Shift/Alt/Windows hoặc khi đang giữ nút chuột.
+
+Cũng có thể mở **Tiện ích…** ở Home hoặc từ menu khay. Sáu mục dùng chung cửa sổ: đổi mục giữ dữ liệu đang nhập trong phiên, đóng cửa sổ bỏ dữ liệu đó. Chỉ đọc clipboard khi bấm Dán/Ctrl+V; nội dung tiện ích không ghi vào lịch sử tác vụ.
+
+| Công cụ | Cách dùng |
+| --- | --- |
+| Tạo QR | Nhập link/text, bấm **Tạo QR**, sao chép ảnh hoặc lưu PNG 512×512. UTF-8, tối đa 2.000 byte; có viền trắng và mức sửa lỗi M. |
+| Đọc QR / Barcode | Chọn ảnh hoặc dán ảnh/Ctrl+V; hiện nội dung và loại mã, hỗ trợ nhiều mã tìm được. Không tự mở link. |
+| Ảnh ↔ Base64 | Chọn/dán ảnh để tạo chuỗi; hoặc dán Base64 thuần/data URI rồi **Giải mã → ảnh** để xem và lưu. Giữ byte gốc khi đọc từ file; ảnh clipboard mã hóa PNG. Tối đa 8 MB; TGA dùng data URI để giữ thông tin định dạng. |
+| Base64 / URL | Mã hóa/giải mã văn bản UTF-8 hoặc thành phần URL. Dấu `+` giữ nguyên khi giải mã URL; không dùng quy tắc form-urlencoded. |
+| JSON | Kiểm tra, định dạng hoặc thu gọn; không làm tròn số lớn. JSON lỗi hiện dòng/vị trí. |
+| Dọn văn bản | Gọn khoảng trắng đầu/cuối từng dòng, bỏ dòng trống, bỏ dòng trùng (phân biệt hoa/thường, giữ thứ tự), đổi hoa/thường; hiện số ký tự/từ/dòng. |
+
+Sửa đầu vào làm mất hiệu lực kết quả cũ. Ô nhập nhận Ctrl+V văn bản; ở công cụ đọc mã và vùng xem ảnh, Ctrl+V nhận ảnh. Lưu dùng bản sao có số khi trùng tên. Văn bản tối đa một triệu ký tự. Ảnh đọc mã dùng giới hạn ảnh hiện có, thu về tối đa 4096 px/cạnh và 16 MP cho nhận dạng; mã quá nhỏ/mờ/bị cắt viền có thể không đọc được. Đã kiểm thử QR, Code128, EAN-13 và xoay/ngược màu trên mẫu tự sinh; các loại barcode ZXing khác chưa được nghiệm thu riêng.
+
 ## Chỉnh ảnh
 
 - Crop, resize và nén: cuộn để zoom tại con trỏ; nút **Vừa khung** và **100%** đổi mức xem. Resize/nén kéo ảnh để pan; crop dùng **Space + kéo** hoặc chuột giữa.
@@ -47,14 +71,26 @@ Vòng kính chỉ vẽ bên trong hình tròn. Nền mờ là ảnh chụp trong
 | JPEG, PNG, WebP, BMP, TIFF, GIF tĩnh, ICO, AVIF, HEIC/HEIF, TGA | Chuyển PNG/JPEG/WebP/BMP/TIFF/GIF/ICO/PDF; resize, crop, xoay 90°, nén JPEG, khung nền; OCR → TXT |
 | PDF có lớp chữ | Word: DOCX sửa được, giữ dòng/ngắt trang cơ bản, không phục dựng bảng/hình; không cần cài Word |
 | PDF, gồm scan và trang trộn | Lấy chữ → TXT UTF-8; đọc lớp chữ hoặc OCR Việt/Anh theo từng trang; không giữ trình bày |
-| PDF | Xuất tất cả trang thành PNG/JPEG 150 DPI; tách trang thành từng PDF; ghép nhiều PDF theo tên file |
+| PDF | Xuất tất cả trang thành PNG/JPEG 150 DPI; chọn trang để tách; ghép PDF và ảnh theo thứ tự tùy chọn |
 | DOC/DOCX, XLS/XLSX, PPT/PPTX | Xuất PDF, cần Microsoft Word/Excel/PowerPoint tương ứng đã cài |
 | DOCX | Trích văn bản thân tài liệu thành TXT UTF-8, không cần Word |
 | Video (MP4, MOV, MKV/WebM, AVI, WMV) | MP4 (H.264/AAC), nén video theo độ phân giải/chất lượng, cắt đoạn, tách âm thanh M4A/MP3, khung hình → PNG, GIF ngắn ≤ 20 giây |
 | Âm thanh (MP3, M4A, WAV, WMA, FLAC, AAC…) | MP3, M4A, WAV, cắt đoạn, ghép nhiều file theo tên |
 | File bất kỳ | Tạo ZIP riêng cho từng file; lưu mã SHA-256 |
 
-Chọn từ hai PDF để hiện Ghép PDF. Batch tối đa 128 file và chỉ hiện các công cụ chung; crop chỉ nhận một ảnh. WebP xuất lossless và giữ alpha; JPEG ghép nền trắng; GIF có tối đa 256 màu; ICO thu về tối đa 256 px. AVIF, HEIC/HEIF và TGA là định dạng đầu vào. HEIC giải mã bằng libheif đi kèm, không cần HEIF Extension của Windows; file có nhiều ảnh lấy ảnh chính, HEIF chuỗi/ảnh động bị từ chối. Ảnh động và TIFF nhiều trang chưa được hỗ trợ.
+Ghép PDF có ngay khi chọn một PDF hoặc chọn trộn PDF và ảnh. Batch tối đa 128 file và chỉ hiện các công cụ chung; crop chỉ nhận một ảnh, tách trang chỉ nhận một PDF. WebP xuất lossless và giữ alpha; JPEG ghép nền trắng; GIF có tối đa 256 màu; ICO thu về tối đa 256 px. AVIF, HEIC/HEIF và TGA là định dạng đầu vào. HEIC giải mã bằng libheif đi kèm, không cần HEIF Extension của Windows; file có nhiều ảnh lấy ảnh chính, HEIF chuỗi/ảnh động bị từ chối. Ảnh động và TIFF nhiều trang chưa được hỗ trợ.
+
+### Tạo, ghép và tách PDF
+
+- **Ảnh → PDF:** chọn **Chuyển ngay** để tạo PDF riêng cho mỗi ảnh; hoặc **Thêm trang…** để mở danh sách và xuất chung một PDF.
+- **Ghép PDF:** thêm PDF/ảnh bằng nút **Thêm PDF / ảnh…** hoặc kéo thả vào cửa sổ. Chọn file để xem trước, dùng nút trang trước/sau để xem PDF; **Lên/Xuống** đổi thứ tự file, **Bỏ khỏi danh sách** chỉ bỏ mục đang chọn. Bấm **Xuất PDF** khi đã sắp xếp xong. Mỗi ảnh là một trang giữ tỷ lệ gốc; trang PDF được nhập trực tiếp, không biến thành ảnh.
+- **Tách trang:** nhập `1-3, 5` hoặc để trống lấy toàn bộ. Chọn **Mỗi trang thành một file PDF** để xuất vào thư mục `_pages`, tên file theo số trang nguồn; bỏ chọn để tạo một PDF theo thứ tự trang nhập. Trang trùng chỉ lấy một lần. Khoảng sai bị chặn trước khi lưu.
+- **Dán ảnh:** Ctrl+V hoặc **Dán ảnh** ở cửa sổ chính mở menu chọn công cụ; trong cửa sổ ghép, ảnh được thêm thành trang mới. Khi con trỏ ở ô nhập chữ, Ctrl+V vẫn dán chữ bình thường. Ảnh clipboard được lưu PNG cục bộ tại `%LOCALAPPDATA%\Orbit\clipboard` để giữ nguồn cho tác vụ/lịch sử; kết quả mặc định vào `Pictures\Orbit`, hoặc thư mục cố định đã chọn trong Cài đặt. Không thay đổi clipboard.
+- **Tên và nơi lưu:** cửa sổ ghép/tách/nén có ô tên và thư mục riêng cho lần xuất. Tách riêng dùng tên đó làm thư mục chứa các trang. Tên trùng vẫn thêm số, không ghi đè.
+- **Nén PDF:** chọn một PDF → **Nén PDF**, chỉnh chất lượng ảnh 30–95 và bấm nén. Tác vụ hiển thị dung lượng trước/sau và phần trăm giảm, giữ thông tin khi mở lại Orbit. Giữ lớp chữ và kích thước trang; nén ảnh RGB/Gray 8-bit dạng JPEG hoặc raw/Flate đơn giản, không giảm độ phân giải. Bỏ qua ảnh có mask, màu đặc biệt, predictor hoặc bộ lọc khác. Nếu không nhỏ hơn, xuất bản sao nguyên nội dung và báo không giảm thêm. Có chặn chữ ký số nhưng chưa phát hiện đầy đủ các trường hợp; không dùng nén cho PDF cần giữ chữ ký.
+- Thành phẩm tối đa 200 trang, 128 file đầu vào, 256 MB/file; kết quả theo nơi lưu đã chọn trong Cài đặt và luôn tránh ghi đè nguồn/đầu ra có sẵn.
+
+PDF có form: xuất ảnh/preview có thể thiếu giá trị đã điền; ghép/tách chưa giữ đầy đủ form điền được. Xem các giới hạn trong ghi chú phiên bản trước khi xử lý tài liệu loại này.
 
 **Khung nền** mở rộng canvas quanh ảnh (khoảng viền 0–40% cạnh dài, tỷ lệ Theo ảnh/1:1/4:5/16:9/9:16) và tô nền: màu, chuyển màu, họa tiết (chấm bi, sọc chéo, ô lưới, giấy), ảnh khác (có thể làm mờ) hoặc chính ảnh gốc làm mờ. Có bo góc, đổ bóng, xuất PNG hoặc JPEG 92%. Ảnh gốc giữ nguyên từng pixel; Orbit không tách hay sửa nền bên trong ảnh. Đầu ra `_frame` tối đa 60 megapixel.
 
@@ -84,10 +120,10 @@ SDK .NET 10.0.402 theo `global.json`; NuGet lấy từ nuget.org. Cache CLI/pack
 .\scripts\run.ps1
 ```
 
-100 kiểm thử mặc định (phần chạy media ghi SKIP trên máy không có Media Foundation); thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
+108 kiểm thử mặc định ở bản phát triển hiện tại (phần chạy media ghi SKIP trên máy không có Media Foundation); thêm 4 kiểm thử Office khi dùng `-OfficeTest`. Đặt `ORBIT_HEIC_SAMPLE` trỏ tới một ảnh HEIC thật để chạy thêm bài giải mã HEIC (không có encoder HEIC để tự tạo mẫu). `scripts/test-updater.ps1` kiểm tra helper bằng tiến trình thật (success/rollback cần khóa ký cục bộ; `-RecoverOnly` chỉ chạy kịch bản phục hồi cập nhật bị ngắt, không cần khóa); fixture chỉ dùng phiên bản 0.0.1/0.0.2 và không đụng app đang dùng. Kết quả ở `artifacts/tests` và `artifacts/updater-tests`. Thư viện và giấy phép phân phối nằm trong `third-party`; model OCR tải bằng script và không nằm trong Git. Khi clone mới, chạy `prepare-ocr.ps1` trước build.
 
 `--render-previews <thư mục tuyệt đối>` tạo ảnh giao diện và kiểm tra codec WebP/PDF và khởi tạo OCR trong bản chạy. Render WPF không chứng minh backdrop native hoặc kéo thả Explorer. `--no-integrations` tắt tray/hook toàn cục cho phiên kiểm thử. Cài đặt mặc định ở `%LOCALAPPDATA%\Orbit\settings.json`; `ORBIT_DATA_DIR` đổi vị trí cho phiên thử. Lịch sử tác vụ đã xong lưu ở `history.json` cùng thư mục (tối đa 200 dòng, chỉ đường dẫn và kết quả); nút **Xóa lịch sử** trên cửa sổ chính chỉ xóa danh sách. Phiên `--no-integrations`/`--render-previews` không ghi lịch sử. `Orbit.Tests.exe --frame-samples <ảnh> <thư mục>` xuất mẫu các kiểu Khung nền để xem bằng mắt. `Orbit.Tests.exe --make-icon assetsorbit.ico` dựng lại icon từ `OrbitIcon.cs` kèm ảnh xem trước.
 
-Chi tiết kiểm chứng và giới hạn: [bản 0.5.0](docs/RELEASE-0.5.0.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
+Chi tiết kiểm chứng và giới hạn: [bản 0.6.0](docs/RELEASE-0.6.0.md). OCR trên mẫu HPG thực tế vẫn còn lỗi dấu và số. Chưa nghiệm thu đa màn hình/DPI cao hoặc mọi trường hợp kéo thả.
 
 Từ 0.5.0 dùng .NET 10 LTS, thay .NET 8 hết hỗ trợ ngày 10/11/2026, theo [chính sách Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).

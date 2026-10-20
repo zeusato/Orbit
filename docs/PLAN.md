@@ -1,5 +1,31 @@
 # Kế hoạch triển khai Orbit
 
+## Tự động phát hành — 20/10/2026
+
+Đại ca chọn một lệnh chuẩn bị release rồi commit/push:
+- `prepare-release.ps1` tăng version app/updater, cập nhật README và tạo notes từ mô tả truyền vào hoặc lịch sử commit. Không tự commit/push.
+- Mọi push chạy build/test; chỉ version mới trên `main` hoặc tag phù hợp được đóng gói, ký, kiểm thử updater và publish qua GitHub Actions.
+- Có kiểm tra đầu vào, không ghi đè notes/tag, chặn downgrade và hướng dẫn chạy lại khi lỗi trong `UPDATES.md`.
+
+## Tiện ích không kéo file — 20/10/2026
+
+Đại ca giao nghiên cứu UX rồi triển khai luôn; sau lượt đầu Đại ca sửa hướng: **Ctrl+Space không kéo file phải mở vòng tiện ích tại con trỏ**, không bắt mở Home. Chọn ô vào thẳng công cụ trong cửa sổ Tiện ích; Home/khay là lối phụ.
+- QR từ link/text; đọc QR/barcode từ file hoặc clipboard; ảnh ↔ Base64 có preview/sao chép/lưu.
+- Bổ sung Base64/URL cho văn bản, định dạng/thu gọn JSON và dọn văn bản.
+- Chỉ xử lý sau khi chọn thao tác rõ ràng; giữ nội dung khi đổi mục, xóa kết quả cũ khi đầu vào đổi; không ghi nội dung tiện ích vào lịch sử.
+- Dùng ZXing.Net 0.16.11 (Apache-2.0) cho QR/barcode, WPF/bộ giải mã ảnh hiện có, System.Text.Json. Chưa thêm camera hoặc theo dõi clipboard nền.
+
+## Bổ sung PDF sau 0.5.0 — 20/10/2026
+
+- Đại ca duyệt thêm mục 2–3–4: dán ảnh clipboard ở Home/composer, chọn tên/thư mục cho lần xuất PDF, nén PDF có dung lượng thực tế trước/sau.
+- Nén ảnh nhúng phù hợp, không rasterize trang hoặc mất lớp chữ. Không hứa mức giảm; đầu ra không nhỏ hơn thì dùng bản sao gốc. Không thêm dependency.
+
+- Ảnh → PDF mở lựa chọn **Chuyển ngay** (mỗi ảnh thành PDF riêng) hoặc **Thêm trang…** (một PDF gồm nhiều ảnh/PDF).
+- Cửa sổ ghép cho thêm bằng chọn file hoặc kéo thả, xem trước từng trang, đổi thứ tự file và bỏ khỏi danh sách; chỉ ghi kết quả sau khi bấm **Xuất PDF**.
+- PDF đơn cũng có **Ghép PDF** để thêm tài liệu/ảnh sau; lựa chọn trộn PDF và ảnh có công cụ ghép.
+- **Tách trang** cho một PDF: nhập khoảng trang, lưu các trang vào một PDF hoặc mỗi trang một file. Giữ nguồn và quy tắc nơi lưu/trùng tên hiện tại.
+- Giới hạn 128 file đầu vào, 200 trang thành phẩm, 256 MB/file. Không thêm thư viện; dùng PDFsharp/PDFtoImage và bộ xử lý ảnh hiện có.
+
 Âm thanh/video, Đại ca chốt ngày 19/10/2026; đã triển khai trong 0.5.0 (xem RELEASE-0.5.0.md), FFmpeg vẫn để sau:
 - **Công nghệ**: dùng bộ xử lý media có sẵn của Windows (Windows.Media.Transcoding/MediaComposition trên Media Foundation), không FFmpeg ở vòng đầu. Trước khi hiện công cụ, Orbit thử mở file; thiếu codec (HEVC, VP9/AV1, Windows N) thì báo cần cài gì.
 - **Công cụ vòng đầu**:
@@ -68,7 +94,7 @@ WIC cung cấp JPEG, PNG, BMP, TIFF và GIF tĩnh đầu vào. Bản đầu từ
 
 ## Tiêu chí nghiệm thu
 
-- Phím gọi chỉ mở menu khi chuột trái đang kéo đủ xa. Không xử lý ảnh trong hook.
+- Phím kéo file chỉ mở vòng file khi chuột trái kéo đủ xa; Ctrl+Space không giữ nút chuột mở vòng tiện ích. Không xử lý nội dung trong hook.
 - Chỉ nhận file thật và hiệu ứng Copy. Vùng tâm, khe phân đoạn và file không hỗ trợ không chạy tác vụ.
 - Không làm thay đổi hash của file nguồn. Không ghi đè file đầu ra có sẵn kể cả khi có tác vụ đồng thời.
 - Đầu ra giải mã được, đúng định dạng và kích thước, có xử lý EXIF orientation.

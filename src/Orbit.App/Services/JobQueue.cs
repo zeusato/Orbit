@@ -7,14 +7,15 @@ using Orbit.App.Imaging;
 
 namespace Orbit.App.Services;
 
-public sealed record JobRecord(string Source, ToolKind Tool, JobState State, string? Output, string? Error, DateTime FinishedUtc);
+public sealed record JobRecord(string Source, ToolKind Tool, JobState State, string? Output, string? Error, DateTime FinishedUtc, string? ResultDetail = null);
 
 public sealed class ImageJob(ImageRequest request) : INotifyPropertyChanged
 {
     public ImageRequest Request { get; } = request;
     public DateTime FinishedUtc { get; internal set; }
     internal static ImageJob Restore(JobRecord record) => new(new ImageRequest(record.Source, record.Tool))
-    { _state = record.State, _progress = record.State == JobState.Completed ? 100 : 0, _output = record.Output, _error = record.Error, FinishedUtc = record.FinishedUtc };
+    { _state = record.State, _progress = record.State == JobState.Completed ? 100 : 0, _output = record.Output, _error = record.Error, FinishedUtc = record.FinishedUtc, ResultDetail = record.ResultDetail };
+    public string? ResultDetail { get; internal set; }
     public string Name => Path.GetFileName(Request.Source);
     public string Tool => ToolCatalog.Description(Request.Tool);
     public CancellationTokenSource Cancellation { get; } = new();
@@ -31,7 +32,7 @@ public sealed class ImageJob(ImageRequest request) : INotifyPropertyChanged
     public string Status => State switch
     {
         JobState.Queued => "Đang xếp hàng", JobState.Running => $"Đang xử lý · {Progress}%",
-        JobState.Completed => "Hoàn tất · " + Path.GetFileName(Output), JobState.Cancelled => "Đã hủy", _ => "Lỗi · " + Error
+        JobState.Completed => "Hoàn tất · " + Path.GetFileName(Output) + (ResultDetail == null ? "" : "\n" + ResultDetail), JobState.Cancelled => "Đã hủy", _ => "Lỗi · " + Error
     };
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Changed([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -100,11 +101,13 @@ public sealed class JobQueue : IDisposable
             {
                 job.Cancellation.Token.ThrowIfCancellationRequested();
                 Post(() => job.State = JobState.Running);
+                var bytesBefore = job.Request.Tool == ToolKind.PdfCompress ? new FileInfo(job.Request.Source).Length : 0;
                 var output = ToolCatalog.IsImageTool(job.Request.Tool)
                     ? _engine.Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p))
                     : ToolCatalog.IsMediaTool(job.Request.Tool) ? MediaEngine.Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p))
                     : new DocumentEngine().Execute(job.Request, job.Cancellation.Token, p => Post(() => job.Progress = p));
-                Post(() => { job.Output = output; job.State = JobState.Completed; Finished?.Invoke(job); });
+                var detail = job.Request.Tool == ToolKind.PdfCompress ? PdfCompression.Describe(bytesBefore, new FileInfo(output).Length) : null;
+                Post(() => { job.Output = output; job.ResultDetail = detail; job.State = JobState.Completed; Finished?.Invoke(job); });
             }
             catch (OperationCanceledException) { Post(() => { job.State = JobState.Cancelled; Finished?.Invoke(job); }); }
             catch (Exception error)
@@ -127,7 +130,7 @@ public sealed class JobQueue : IDisposable
         if (_historyFile == null) return;
         try
         {
-            var records = Jobs.Where(j => !j.CanCancel).Take(HistoryLimit).Select(j => new JobRecord(j.Request.Source, j.Request.Tool, j.State, j.Output, j.Error, j.FinishedUtc)).ToArray();
+            var records = Jobs.Where(j => !j.CanCancel).Take(HistoryLimit).Select(j => new JobRecord(j.Request.Source, j.Request.Tool, j.State, j.Output, j.Error, j.FinishedUtc, j.ResultDetail)).ToArray();
             Directory.CreateDirectory(Path.GetDirectoryName(_historyFile)!);
             var temp = _historyFile + ".tmp"; File.WriteAllText(temp, System.Text.Json.JsonSerializer.Serialize(records)); File.Move(temp, _historyFile, true);
         }

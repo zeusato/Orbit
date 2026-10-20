@@ -8,7 +8,7 @@
     <ApplicationIcon>../../assets/orbit.ico</ApplicationIcon>
     <AssemblyName>Orbit</AssemblyName>
     <RootNamespace>Orbit.App</RootNamespace>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../Orbit.Core/Orbit.Core.csproj" /></ItemGroup>
@@ -17,9 +17,11 @@
     <PackageReference Include="PDFtoImage" Version="5.4.0" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="PdfPig" Version="0.1.16" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
     <PackageReference Include="Tesseract" Version="5.2.0" GeneratePathProperty="true" ExcludeAssets="build" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../../third-party/ZXing.Net-*.txt" Link="third-party/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../assets/tessdata/*.traineddata" Link="tessdata/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="$(PkgTesseract)/x64/*.dll" Link="x64/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

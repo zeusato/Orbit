@@ -20,6 +20,8 @@ internal static partial class Program
             var required = hotkey switch { MenuHotkey.CtrlSpace => 1, MenuHotkey.CtrlShiftSpace => 3, _ => 2 };
             var expected = flags == (required | 16 | 32);
             Assert(MenuHotkeys.ShouldActivate(hotkey, down, dragged, ctrl, shift, alt, win) == expected, $"exact modifiers and drag gate: {hotkey}/{flags}");
+            Assert(MenuHotkeys.ShouldOpenQuickMenu(down, ctrl, shift, alt, win) == (!down && ctrl && !shift && !alt && !win),
+                $"idle shortcut ignores drag preference, requires no mouse button: {hotkey}/{flags}");
         }
         var legacy = JsonSerializer.Deserialize<AppSettings>("{\"HotkeyNeedsShift\":true}")!;
         Assert(legacy.EffectiveHotkey == MenuHotkey.CtrlShiftSpace, "old Ctrl+Shift preference survives upgrade");

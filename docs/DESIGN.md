@@ -1,5 +1,27 @@
 # Thiết kế giao diện Orbit
 
+## Tiện ích không kéo file
+
+- Lối vào chính khi không kéo file: **Ctrl+Space → vòng sáu tiện ích tại con trỏ → chọn công cụ**. Dùng cùng hình vòng/native region và vị trí theo màn hình với menu file. Bấm ô/phím 1–6 mở thẳng mục tương ứng, không hiện Home; Esc/bấm ra ngoài/Ctrl+Space lần nữa hủy. Không nhận drop trong vòng tiện ích; nhận diện file đang chờ không được thay thế nó.
+- Home/khay vẫn có **Tiện ích…**. Cửa sổ dùng lại, 1040 × 720 DIP, tối thiểu 880 × 620; danh sách sáu mục bên trái, nội dung bên phải. Chữ trong sản phẩm dùng ngôn ngữ trung tính, không đưa cách xưng hô trong chat vào UI.
+- Hai vùng nhập/kết quả hoặc chuỗi/ảnh, nhãn rõ ràng; nút xử lý cạnh đầu vào, Sao chép/Lưu cạnh kết quả. QR chỉ tạo khi bấm; chọn ảnh/nhấn Dán ảnh ở mục đọc mã là yêu cầu đọc rõ ràng.
+- Đổi mục giữ dữ liệu trong phiên. Sửa đầu vào xóa kết quả cũ và vô hiệu hóa xuất; chuỗi dán vượt giới hạn bị từ chối, không âm thầm cắt ngắn. Không tự đọc clipboard khi mở cửa sổ.
+- Tác vụ chạy nền, khóa vùng đang xử lý nhưng vẫn đổi mục/đóng được. Đóng hủy việc chờ và bỏ kết quả về muộn; ZXing chỉ có điểm hủy trước/sau lượt nhận dạng. Editor đang mở chặn cập nhật ứng dụng.
+- QR preview trắng, lấy mẫu nearest-neighbor; kết quả đọc mã là text có nhãn loại mã. Base64 có lựa chọn data URI; định dạng file suy từ dữ liệu thực, không tin MIME khai báo. Giữ nguyên byte ảnh khi lưu.
+- Tham khảo cấu trúc điều hướng: [Microsoft Windows navigation basics](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics). Thư viện nhận dạng: [ZXing.Net](https://github.com/micjahn/ZXing.Net).
+
+## Bổ sung PDF sau 0.5.0
+
+- Home có **Dán ảnh · Ctrl+V** cạnh Chọn file; dán chỉ mở menu để chọn công cụ. Composer có cùng nút để thêm trang; ô nhập chữ giữ thao tác dán chữ. Đọc clipboard trên STA, mã hóa snapshot PNG chạy nền; nguồn được giữ trong thư mục dữ liệu ứng dụng.
+- Tên PDF và nơi lưu nằm ở cột trái của ghép/tách; mặc định từ nguồn đầu tiên và cài đặt, chỉnh cho từng lần xuất. Tách riêng dùng tên làm thư mục. Giữ hộp chọn hai nút nhỏ như cũ.
+- Nén PDF dùng cửa sổ 580 × 470 DIP, chất lượng ảnh 30–95, tên/nơi lưu; bấm nén rồi hiện Home. Hàng tác vụ báo trước/sau, % giảm hoặc không giảm; lưu chi tiết này trong lịch sử. Giữ chữ và trang; ảnh có mask/màu/filter chưa hỗ trợ được giữ nguyên.
+
+- Sau khi chọn PDF trên menu ảnh, hộp chọn tự co theo nội dung (khoảng 284 × 58 DIP), chỉ có hai nút nằm ngang **Chuyển ngay** và **Thêm trang…**. Không tiêu đề, tên file, mô tả hoặc nút đóng; Esc/bấm ra ngoài để hủy. Giải thích mỗi ảnh một PDF riêng nằm trong tooltip.
+- Ghép PDF/ảnh dùng cửa sổ 980 × 700 DIP: trái là danh sách file theo thứ tự đầu ra, nút thêm, lên/xuống, bỏ khỏi danh sách và tổng số trang; phải là preview cùng nút trang trước/sau. Kéo thả vào cửa sổ để thêm. Mỗi ảnh một trang, giữ tỷ lệ; mỗi PDF giữ thứ tự trang nội bộ.
+- Tách trang dùng cùng khung, một file nguồn, ô khoảng trang (ví dụ `1-3, 5`) và lựa chọn **Mỗi trang thành một file PDF**. Để trống lấy tất cả; khoảng sai khóa nút lưu; bỏ chọn tạo một PDF chứa các trang theo thứ tự nhập.
+- Thêm file và preview chạy nền; đóng cửa sổ hủy tải, bỏ kết quả preview cũ. Thêm một lượt có file lỗi không thay đổi danh sách đã có. File nguồn chỉ đọc; **Bỏ khỏi danh sách** không xóa file.
+- Lưu qua hàng đợi hiện có; mở editor chặn áp dụng cập nhật. Giữ giới hạn 200 trang/128 file và nơi lưu từ Cài đặt.
+
 0.5.0:
 - **Khung nền** dùng chung khung editor với crop/resize/nén, có xem trước ảnh thu nhỏ với zoom/pan. Ô Khung nền nằm sau Nén JPEG trên menu ảnh.
 - Thứ tự cột phải:
@@ -47,7 +69,7 @@ Thứ tự bản đầu từ trên cùng theo chiều kim đồng hồ: PNG, JPE
 
 Tâm hiển thị tên hoặc số lượng file và trạng thái kéo thả. Chưa nhận được IDataObject thì hiện hướng dẫn di chuyển vào vòng. Vùng tâm và khe không thực hiện hành động. Chỉ tô sáng ô đủ điều kiện. Thả vào ô hợp lệ mới thực thi; Esc kết thúc phiên và đóng menu.
 
-Phím mặc định Ctrl và Space, có tùy chọn Ctrl Shift và Space hoặc Shift và Space (từ 0.2.2). Cài đặt lưu lựa chọn và áp dụng ngay; các phím bổ trợ phải khớp chính xác. Chỉ can thiệp Space khi đang kéo; không chiếm Ctrl dùng để sao chép. Không tuyên bố tổ hợp nào không xung đột với mọi ứng dụng.
+Phím kéo mặc định Ctrl và Space, có tùy chọn Ctrl Shift và Space hoặc Shift và Space (từ 0.2.2). Cài đặt lưu lựa chọn và áp dụng ngay; các phím bổ trợ phải khớp chính xác. Khi không giữ nút chuột, Ctrl+Space cố định gọi vòng tiện ích; các lựa chọn kéo như Shift+Space không được chiếm phím khi gõ thường. Giữ Space không mở lặp, lần nhấn kế tiếp mới toggle. Không tuyên bố tổ hợp nào không xung đột với mọi ứng dụng.
 
 ## Vật liệu
 

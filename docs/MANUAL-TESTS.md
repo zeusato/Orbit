@@ -2,6 +2,41 @@
 
 Đại ca có thể dùng checklist này với bản chạy trong `dist/Orbit`. Em dành riêng phần này cho các tình huống cần kiểm tra với cửa sổ thật, chuột, Explorer và cấu hình màn hình thực tế.
 
+## Tiện ích không kéo file
+
+- [ ] Để Orbit ở khay, dùng ứng dụng khác: Ctrl+Space không kéo file mở vòng tại con trỏ, không hiện Home. Bấm từng ô/phím 1–6 vào đúng công cụ.
+- [ ] Giữ phím Space không bật/tắt lặp. Ctrl+Space lần nữa, Esc hoặc bấm ra ngoài đóng vòng, không chạy công cụ.
+- [ ] Chỉ Ctrl+Space chính xác mở tiện ích; không giữ nút chuột. Đổi phím kéo sang Shift+Space: Shift+Space khi gõ vẫn bình thường, Ctrl+Space vẫn gọi tiện ích.
+- [ ] Kéo file với phím cấu hình vẫn ra vòng file; dùng xen kẽ hai vòng, nhận diện PDF chậm không thay nội dung vòng tiện ích.
+
+- [ ] Mở từ Home và khay; gọi lại chỉ đưa cửa sổ cũ ra trước, nội dung đang nhập còn nguyên khi đổi mục.
+- [ ] Tạo QR từ link dài/tiếng Việt, sao chép sang ứng dụng khác, lưu PNG rồi dùng điện thoại quét đối chiếu nội dung.
+- [ ] Dán ảnh chụp QR/barcode từ Snipping Tool và ảnh copy từ trình duyệt; thử barcode bao bì thực, ảnh nghiêng/mờ và nhiều mã.
+- [ ] Đang gõ text thì Ctrl+V dán chữ; vùng đọc mã nhận ảnh. Clipboard không có nội dung phù hợp báo rõ.
+- [ ] Ảnh → Base64 và ngược lại, raw/data URI; lưu vào tên file đã có phải tạo bản sao có số. Thử alpha, JPEG và ảnh sát giới hạn 8 MB.
+- [ ] JSON lỗi không còn kết quả cũ; số rất lớn không bị làm tròn. Bỏ dòng trùng giữ dòng xuất hiện trước, phân biệt hoa/thường.
+- [ ] Chuỗi dán quá dài bị từ chối, không cắt ngắn rồi xử lý; đóng khi đang đọc mã không báo lỗi hoặc mở lại cửa sổ.
+- [ ] Kiểm tra độ tương phản, thanh cuộn, bàn phím và bố cục tại DPI 125–200%, cửa sổ nhỏ.
+
+## PDF: tạo nhiều trang, ghép và tách
+
+- [ ] Chụp ảnh bằng Snipping Tool, mở Home và Ctrl+V: menu ảnh xuất hiện, chưa tự chạy tác vụ. Clipboard trống/chỉ có chữ báo rõ.
+- [ ] Ctrl+V trong composer thêm một trang; đang gõ tên/đường dẫn thì dán chữ vào ô đó. Clipboard từ trình duyệt và ảnh có alpha hiển thị đúng.
+- [ ] Đổi tên/nơi lưu ở ghép, tách chung và tách riêng; kiểm tra đuôi .pdf, thư mục trang và trùng tên không ghi đè.
+- [ ] Chọn Nén PDF, thử chất lượng 30/75/95 trên scan và PDF có chữ; đối chiếu dung lượng thật, vẫn chọn/copy chữ được. PDF đã tối ưu có thể báo không giảm; bản gốc giữ nguyên.
+- [ ] Mở lại Orbit: tác vụ nén vẫn có dung lượng trước/sau. Thử PDF có chữ ký số: báo từ chối, không có đầu ra dở.
+
+- [ ] Thả một ảnh vào ô PDF trên vòng menu: hiện lựa chọn Chuyển ngay / Thêm trang; đóng hoặc Esc không tạo file.
+- [ ] Chuyển ngay tạo một PDF một trang; chọn nhiều ảnh tạo PDF riêng theo từng ảnh.
+- [ ] Thêm trang mở editor có ảnh đã chọn; thêm ảnh và PDF bằng nút chọn file và kéo thả từ Explorer.
+- [ ] Lên/Xuống đổi thứ tự file; bỏ mục chỉ thay danh sách. PDF xuất giữ thứ tự đó, tỷ lệ ảnh và nội dung chữ của PDF.
+- [ ] Chọn một PDF hoặc trộn PDF/ảnh: vòng menu có Ghép PDF; thêm một PDF/ảnh khác rồi xuất được.
+- [ ] Tách trang `1-3, 5`: bật xuất riêng tạo đúng bốn file mang số trang nguồn; tắt tạo một PDF bốn trang. Thử `5, 1` để kiểm tra thứ tự.
+- [ ] Trang 0, trang vượt số trang, khoảng ngược bị chặn. Để trống lấy tất cả.
+- [ ] Dùng PDF dọc/ngang/xoay, ảnh HEIC thật, tên file dài; preview đúng tỷ lệ và điều hướng từng trang.
+- [ ] Thêm file lỗi, quá 128 file hoặc quá 200 trang: thông báo lỗi, danh sách cũ giữ nguyên. Đóng khi đang tải/preview không tạo tác vụ.
+- [ ] Thử DPI 125–200%, theme tối, cửa sổ thu nhỏ; kéo thả chỉ báo Copy và không ảnh hưởng nguồn.
+
 ## Luồng kéo thả cốt lõi
 
 - [ ] Mở Orbit không dùng administrator; kéo một JPEG trong Explorer, bấm Ctrl và Space khi vẫn giữ chuột, di chuyển vào PNG rồi thả.

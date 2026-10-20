@@ -1,6 +1,7 @@
 ﻿param([switch]$SkipTests, [switch]$RequireSignature, [string]$SigningKey)
 $ErrorActionPreference = 'Stop'
 $orbitRoot = Split-Path -Parent $PSScriptRoot
+$orbitMetadata = & (Join-Path $PSScriptRoot 'release-metadata.ps1') -ProjectRoot $orbitRoot -RequireNotes:$RequireSignature
 if (!$SigningKey) { $SigningKey = Join-Path $orbitRoot '.release/signing-key.private.pem' }
 if ($RequireSignature -and !(Test-Path -LiteralPath $SigningKey)) { throw 'Thiếu private key ký release. Không tự tạo khóa mới.' }
 $orbitBuild = Join-Path $orbitRoot 'artifacts/package-build'
@@ -46,7 +47,7 @@ try {
         $orbitProbe = Start-Process -FilePath (Join-Path $orbitRunner 'Orbit.Updater.exe') -Wait -PassThru -WindowStyle Hidden
     } finally { $env:DOTNET_ROOT = $orbitSavedRoot }
     if ($orbitProbe.ExitCode -ne 2) { throw "Helper chép riêng không khởi động đúng (exit $($orbitProbe.ExitCode))." }
-    $orbitVersion = ([xml](Get-Content -LiteralPath 'src/Orbit.App/Orbit.App.csproj' -Raw)).Project.PropertyGroup.Version
+    $orbitVersion = $orbitMetadata.Version
     Compress-Archive -LiteralPath (Join-Path $orbitRoot 'dist\Orbit') -DestinationPath (Join-Path $orbitRoot "dist\Orbit-$orbitVersion-win-x64.zip") -Force
     $orbitZip = Join-Path $orbitRoot "dist/Orbit-$orbitVersion-win-x64.zip"
     $orbitHash = (Get-FileHash -LiteralPath $orbitZip -Algorithm SHA256).Hash

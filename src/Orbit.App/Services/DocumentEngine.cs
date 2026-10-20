@@ -4,9 +4,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Orbit.App.Imaging;
-using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PdfPages = Orbit.Core.PdfPages;
 
 namespace Orbit.App.Services;
 
@@ -19,14 +19,20 @@ public sealed class DocumentEngine
         if (!File.Exists(source)) throw new FileNotFoundException("Không tìm thấy file nguồn.", source);
         if (new FileInfo(source).Length > ImageEngine.MaxFileBytes) throw new NotSupportedException("Mỗi file tối đa 256 MB.");
         var kind = FileTypes.Detect(source);
+        if (request.OutputStem != null) PdfOutput.ValidateStem(request.OutputStem);
         var dir = OutputLocation.Prepare(request);
-        var folderOutput = request.Tool is ToolKind.PdfPng or ToolKind.PdfJpeg or ToolKind.PdfSplit;
+        var folderOutput = request.Tool is ToolKind.PdfPng or ToolKind.PdfJpeg ||
+            request.Tool == ToolKind.PdfSplit && request.Pdf?.SeparateFiles != false;
         var temp = Path.Combine(dir, $".orbit-{Guid.NewGuid():N}" + (folderOutput ? "" : request.Tool == ToolKind.PdfWord ? ".tmp.docx" : ".tmp.pdf"));
         try
         {
             if (folderOutput) Directory.CreateDirectory(temp);
             switch (request.Tool)
             {
+                case ToolKind.PdfCompress:
+                    RequirePdf(kind);
+                    PdfCompression.Write(source, temp, request.Quality, token, progress);
+                    break;
                 case ToolKind.PdfWord:
                     RequirePdf(kind);
                     PdfWordWriter.Write(source, temp, token, progress);
@@ -38,18 +44,7 @@ public sealed class DocumentEngine
                     if (!FileTypes.IsImage(kind)) throw new NotSupportedException("OCR ảnh chỉ nhận ảnh tĩnh được hỗ trợ.");
                     TextExtraction.FromImage(source, temp, token, progress); break;
                 case ToolKind.ImagePdf:
-                    var bitmap = new ImageEngine().Load(source);
-                    var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                    using (var memory = new MemoryStream())
-                    {
-                        encoder.Save(memory); memory.Position = 0;
-                        using var image = XImage.FromStream(memory);
-                        using var pdf = new PdfDocument(); var page = pdf.AddPage();
-                        var scale = Math.Min(1, 14400d / Math.Max(bitmap.PixelWidth, bitmap.PixelHeight));
-                        page.Width = XUnit.FromPoint(bitmap.PixelWidth * .75 * scale); page.Height = XUnit.FromPoint(bitmap.PixelHeight * .75 * scale);
-                        using (var g = XGraphics.FromPdfPage(page)) g.DrawImage(image, 0, 0, page.Width.Point, page.Height.Point);
-                        pdf.Save(temp);
-                    }
+                    PdfAssembly.Write(request.Sources ?? [source], temp, token, progress);
                     break;
                 case ToolKind.PdfPng: case ToolKind.PdfJpeg:
                     RequirePdf(kind);
@@ -73,28 +68,24 @@ public sealed class DocumentEngine
                     using (var pdf = PdfReader.Open(source, PdfDocumentOpenMode.Import))
                     {
                         CheckPages(pdf.PageCount);
-                        for (int i = 0; i < pdf.PageCount; i++)
+                        var selected = PdfPages.Parse(request.Pdf?.Pages, pdf.PageCount);
+                        using var extracted = new PdfDocument();
+                        for (int i = 0; i < selected.Length; i++)
                         {
-                            token.ThrowIfCancellationRequested(); using var single = new PdfDocument(); single.AddPage(pdf.Pages[i]);
-                            single.Save(Path.Combine(temp, $"page-{i + 1:D4}.pdf")); progress?.Invoke(10 + (i + 1) * 75 / pdf.PageCount);
+                            token.ThrowIfCancellationRequested();
+                            if (folderOutput)
+                            {
+                                using var single = new PdfDocument(); single.AddPage(pdf.Pages[selected[i]]);
+                                single.Save(Path.Combine(temp, $"page-{selected[i] + 1:D4}.pdf"));
+                            }
+                            else extracted.AddPage(pdf.Pages[selected[i]]);
+                            progress?.Invoke(10 + (i + 1) * 75 / selected.Length);
                         }
+                        if (!folderOutput) extracted.Save(temp);
                     }
                     break;
                 case ToolKind.PdfMerge:
-                    var sources = request.Sources ?? throw new ArgumentException("Chọn ít nhất hai PDF để ghép.");
-                    if (sources.Length is < 2 or > 128) throw new ArgumentException("Chọn từ 2 đến 128 PDF.");
-                    using (var merged = new PdfDocument())
-                    {
-                        foreach (var input in sources.OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase))
-                        {
-                            token.ThrowIfCancellationRequested(); RequirePdf(FileTypes.Detect(input));
-                            if (new FileInfo(input).Length > ImageEngine.MaxFileBytes) throw new NotSupportedException("Mỗi PDF tối đa 256 MB.");
-                            using var pdf = PdfReader.Open(input, PdfDocumentOpenMode.Import);
-                            CheckPages(merged.PageCount + pdf.PageCount);
-                            foreach (var page in pdf.Pages) merged.AddPage(page);
-                        }
-                        merged.Save(temp);
-                    }
+                    PdfAssembly.Write(request.Sources ?? [source], temp, token, progress);
                     break;
                 case ToolKind.OfficePdf:
                     if (!FileTypes.IsOffice(kind)) throw new NotSupportedException("File không phải tài liệu Office.");
@@ -129,8 +120,8 @@ public sealed class DocumentEngine
             }
             progress?.Invoke(90); token.ThrowIfCancellationRequested();
             string result;
-            if (folderOutput) result = CommitFolder(temp, dir, Path.GetFileNameWithoutExtension(source) + (request.Tool == ToolKind.PdfSplit ? "_pages" : "_images"));
-            else { var name = ToolCatalog.OutputName(request); result = OutputFiles.Commit(temp, dir, name.Stem, name.Extension); }
+            if (folderOutput) result = CommitFolder(temp, dir, request.OutputStem ?? Path.GetFileNameWithoutExtension(source) + (request.Tool == ToolKind.PdfSplit ? "_pages" : "_images"));
+            else { var name = ToolCatalog.OutputName(request); result = OutputFiles.Commit(temp, dir, request.OutputStem ?? name.Stem, name.Extension); }
             progress?.Invoke(100); return result;
         }
         finally

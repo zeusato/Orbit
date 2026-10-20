@@ -39,6 +39,7 @@ public sealed class RadialWindow : Window
     public Task Detection { get; private set; } = Task.CompletedTask;
     public IReadOnlyList<ToolKind> VisibleTools => _pageTools;
     public bool NativeDragActive { get; private set; }
+    public bool QuickMode { get; private set; }
     public string LastDropDiagnostic { get; private set; } = "Chưa nhận phiên kéo thả";
     public bool BackdropAvailable { get; private set; }
 
@@ -161,6 +162,11 @@ public sealed class RadialWindow : Window
     {
         var data = kind switch
         {
+            ToolKind.QuickQr => "M2,2 L9,2 9,9 2,9 Z M15,2 L22,2 22,9 15,9 Z M2,15 L9,15 9,22 2,22 Z M14,14 L18,14 18,18 22,18 22,22 14,22 Z",
+            ToolKind.QuickReadCode => "M2,7 L2,2 7,2 M17,2 L22,2 22,7 M22,17 L22,22 17,22 M7,22 L2,22 2,17 M6,6 L6,18 M10,6 L10,18 M14,6 L14,18 M18,6 L18,18",
+            ToolKind.QuickImageBase64 => "M3,3 L21,3 21,21 3,21 Z M3,17 L9,11 14,16 17,13 21,17 M16,7 L18,7",
+            ToolKind.QuickTextEncoding or ToolKind.QuickJson => "M8,4 L2,12 8,20 M16,4 L22,12 16,20 M14,3 L10,21",
+            ToolKind.QuickCleanText => "M3,4 L21,4 M12,4 L12,20 M7,20 L17,20 M3,10 L6,10 M18,10 L21,10",
             ToolKind.Png or ToolKind.Jpeg or ToolKind.Webp or ToolKind.Bmp or ToolKind.Gif or ToolKind.Tiff or ToolKind.Ico or ToolKind.PdfPng or ToolKind.PdfJpeg => "M3,3 L21,3 21,21 3,21 Z M3,17 L9,11 14,16 17,13 21,17 M16,7 A1,1 0 1 1 16,9 A1,1 0 1 1 16,7",
             ToolKind.More => "M5,12 L19,12 M13,6 L19,12 13,18",
             ToolKind.OfficePdf or ToolKind.ImagePdf or ToolKind.DocxText or ToolKind.PdfSplit or ToolKind.PdfMerge or ToolKind.PdfWord or ToolKind.PdfText or ToolKind.ImageText => "M5,2 L15,2 20,7 20,22 5,22 Z M15,2 L15,7 20,7 M8,12 L17,12 M8,16 L17,16",
@@ -214,21 +220,26 @@ public sealed class RadialWindow : Window
         if (previous != _selected) RefreshColors();
     }
     public void ShowMenu(Native.Point cursor, string[]? files = null)
+        => ShowMenuCore(cursor, files, false);
+    public void ShowQuickMenu(Native.Point cursor) => ShowMenuCore(cursor, null, true);
+    private void ShowMenuCore(Native.Point cursor, string[]? files, bool quick)
     {
         if (IsVisible) HideMenu();
         _glassImage.Source = _app.Settings.Glass && !SystemParameters.HighContrast && Native.TransparencyEnabled() ? MenuBackdrop.Capture(cursor) : null;
         BackdropAvailable = _glassImage.Source != null;
-        NativeDragActive = files == null;
-        _activationPoint = cursor; _armed = files != null;
+        QuickMode = quick; AllowDrop = !quick;
+        NativeDragActive = !quick && files == null;
+        _activationPoint = cursor; _armed = !NativeDragActive;
         _files = []; _ready = false; _detectionError = null; _hint.ToolTip = null; _moreLatched = false; _tools = []; _page = 0; RebuildTools();
-        _file.Text = _files.Length switch { 0 => "Kéo file vào", 1 => Path.GetFileName(_files[0]), _ => $"{_files.Length} file" };
+        if (quick) { _ready = true; _tools = ToolCatalog.QuickTools; RebuildTools(); Detection = Task.CompletedTask; }
+        _file.Text = quick ? "Tiện ích" : "Kéo file vào";
         LastDropDiagnostic = NativeDragActive ? "Đã gọi menu, đang chờ OLE DragEnter" : "Chọn file trực tiếp";
         Select(-1); ShowActivated = !NativeDragActive; Native.SetNoActivate(this, NativeDragActive);
         Native.PositionMenu(this, cursor); Show(); Native.PositionMenu(this, cursor);
-        if (files != null) Detection = DetectFiles(files);
+        if (!quick && files != null) Detection = DetectFiles(files);
         if (!NativeDragActive) Activate();
     }
-    public void HideMenu() { ++_generation; _detectionCancellation?.Cancel(); _moreTimer.Stop(); NativeDragActive = false; Hide(); _glassImage.Source = null; BackdropAvailable = false; _files = []; _ready = false; Select(-1); }
+    public void HideMenu() { ++_generation; _detectionCancellation?.Cancel(); _moreTimer.Stop(); NativeDragActive = false; QuickMode = false; Hide(); _glassImage.Source = null; BackdropAvailable = false; _files = []; _ready = false; Select(-1); }
 
     private void Enter(object sender, DragEventArgs e)
     {

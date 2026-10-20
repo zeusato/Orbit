@@ -4,6 +4,11 @@ public enum MenuHotkey { CtrlSpace, CtrlShiftSpace, ShiftSpace }
 
 public static class MenuHotkeys
 {
+    // The utility launcher is fixed Ctrl+Space. Drag-only alternatives (especially
+    // Shift+Space) must not become global shortcuts during normal typing.
+    public static bool ShouldOpenQuickMenu(bool mouseButtonDown, bool control, bool shift, bool alt, bool windows) =>
+        !mouseButtonDown && control && !shift && !alt && !windows;
+
     public static string Label(MenuHotkey hotkey) => hotkey switch
     {
         MenuHotkey.ShiftSpace => "Shift + Space",

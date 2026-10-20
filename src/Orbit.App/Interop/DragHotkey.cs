@@ -15,6 +15,7 @@ public sealed class DragHotkey : IDisposable
     private Native.Point _origin;
     private Exception? _failure;
     public event Action<Native.Point>? Requested;
+    public event Action<Native.Point>? QuickRequested;
     public event Action? Released;
     public event Action? Cancelled;
 
@@ -81,6 +82,12 @@ public sealed class DragHotkey : IDisposable
                 if (down && MenuHotkeys.ShouldActivate(_hotkey(), _mouseDown && (Native.GetAsyncKeyState(1) & 0x8000) != 0, _dragged, control, shift, alt, windows))
                 {
                     _spaceConsumed = true; Native.GetCursorPos(out var point); Requested?.Invoke(point); return new IntPtr(1);
+                }
+                var mouseButtonDown = (Native.GetAsyncKeyState(1) & 0x8000) != 0 || (Native.GetAsyncKeyState(2) & 0x8000) != 0 ||
+                    (Native.GetAsyncKeyState(4) & 0x8000) != 0 || (Native.GetAsyncKeyState(5) & 0x8000) != 0 || (Native.GetAsyncKeyState(6) & 0x8000) != 0;
+                if (down && MenuHotkeys.ShouldOpenQuickMenu(mouseButtonDown, control, shift, alt, windows))
+                {
+                    _spaceConsumed = true; Native.GetCursorPos(out var point); QuickRequested?.Invoke(point); return new IntPtr(1);
                 }
             }
         }

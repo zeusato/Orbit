@@ -1,0 +1,6 @@
+Orbit uses ZXing.Net 0.16.11 by Michael Jahn and contributors.
+ZXing.Net is a .NET port of ZXing, by the ZXing authors.
+Project: https://github.com/micjahn/ZXing.Net
+Package: https://www.nuget.org/packages/ZXing.Net/0.16.11
+License: Apache License 2.0; see ZXing.Net-LICENSE.txt.
+Original library is distributed unmodified. Orbit supplies its own WPF bitmap adapter.
